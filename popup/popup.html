@@ -6,118 +6,224 @@
   <title>Orthex</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="popup.css" />
 </head>
 <body>
-
-  <!-- The Cream Canvas base with primary border dots -->
-  <div class="lca-container">
+  <!-- Global Background Animation -->
+  <div class="lca-global-bg">
     <div id="lca-g-interactive" class="lca-g-interactive"></div>
+  </div>
+
+  <div id="popup-root">
     
-    <!-- Header -->
-    <header class="p-header lca-widget">
-      <div class="p-header-icon">
-        <img src="../assets/icon-48.png" width="18" height="18" alt="Orthex Logo" />
-      </div>
-      <div class="p-header-info">
-        <div class="p-header-title">Orthex</div>
-        <div class="p-header-sub" id="provider-label">Powered by GLM-4.5</div>
-      </div>
-      <div class="p-status-dot p-status-dot--active" id="status-dot" title="AI ready"></div>
-    </header>
-
-    <!-- Groq API Key Section -->
-    <section class="p-section lca-widget" id="groq-key-section">
-      <div class="lca-wh" style="justify-content: space-between;">
-        <div class="lca-wh-title">Groq API Key</div>
-      </div>
-      <div class="p-key-row">
-        <input type="password" id="groq-key-input" class="p-key-input" placeholder="gsk_..." autocomplete="off" spellcheck="false" />
-        <button id="groq-save-btn" class="p-key-save-btn">Save</button>
-      </div>
-      <div id="groq-key-status" class="p-key-status"></div>
-      <div class="lca-note lca-note--info" style="margin-top:8px;">
-        <div class="lca-note-txt" style="font-size:11px;">Required. Get a free key at <a href="https://console.groq.com/keys" target="_blank" style="color:var(--lca-primary);">console.groq.com</a>.</div>
-      </div>
-    </section>
-
-    <!-- Trigger Settings -->
-    <section class="p-section lca-widget">
-      <div class="lca-wh">
-        <div class="lca-wh-title">Analysis Settings</div>
-      </div>
-
-      <div class="p-toggle-row">
-        <div class="p-toggle-info">
-          <div class="p-toggle-label">Auto-analyze on Accept</div>
-          <div class="p-toggle-desc">Show AI panel when solution passes</div>
+    <!-- PAGE 1: HOME (Dashboard) -->
+    <div class="page page-home active" id="page-home">
+      <!-- Header -->
+      <header class="p-header-dash lca-widget lca-no-border">
+        <div class="p-header-left" style="display: flex; align-items: center; gap: 8px;">
+          <img src="../assets/icon-48.png" alt="Orthex Logo" style="width: 20px; height: 20px; border-radius: 4px;" />
+          <div class="p-header-title">Orthex</div>
         </div>
-        <label class="p-switch">
-          <input type="checkbox" id="toggle-auto" />
-          <span class="p-switch-track"></span>
-        </label>
-      </div>
-
-      <div class="p-toggle-row">
-        <div class="p-toggle-info">
-          <div class="p-toggle-label">Analyze Wrong Answers</div>
-          <div class="p-toggle-desc">Improvement tips on incorrect attempts</div>
+        <div class="p-header-right">
+          <div class="p-version-badge">v1.1.0</div>
+          <div class="p-status-dot p-status-dot--active" id="status-dot-home" title="AI ready"></div>
         </div>
-        <label class="p-switch">
-          <input type="checkbox" id="toggle-wa" />
-          <span class="p-switch-track"></span>
-        </label>
-      </div>
+      </header>
 
-      <div class="p-toggle-row">
-        <div class="p-toggle-info">
-          <div class="p-toggle-label">Analyze TLE / MLE</div>
-          <div class="p-toggle-desc">Efficiency suggestions on timeouts</div>
+      <!-- Activity Card -->
+      <section class="p-section lca-widget lca-no-border" style="padding-top: 24px;">
+        <div class="p-activity-card">
+          <div class="p-activity-lbl">Today's activity</div>
+          <div class="p-activity-val">
+            <span class="p-act-num" id="stat-today-home">0</span> <span class="p-act-txt">analyses</span>
+          </div>
         </div>
-        <label class="p-switch">
-          <input type="checkbox" id="toggle-tle" />
-          <span class="p-switch-track"></span>
-        </label>
-      </div>
+      </section>
 
-      <div class="p-toggle-row">
-        <div class="p-toggle-info">
-          <div class="p-toggle-label">UI Theme Style</div>
-          <div class="p-toggle-desc">Switch between editorial and neubrutalist</div>
+      <!-- APPEARANCE CARD -->
+      <section class="settings-card s-appearance-card" style="margin-top: 16px;">
+        <div class="s-section-lbl">APPEARANCE</div>
+        <div class="theme-selector-grid" id="style-segmented">
+          
+          <!-- Editorial Option -->
+          <div class="theme-card p-segment" data-style="classic" tabindex="0" role="button">
+            <div class="mini-wireframe mini-editorial">
+              <div class="mini-header"></div>
+              <div class="mini-body">
+                <div class="mini-col"></div>
+                <div class="mini-col"></div>
+              </div>
+              <div class="mini-footer">
+                <div class="mini-btn"></div>
+              </div>
+            </div>
+            <div class="theme-label">
+              <div class="radio-btn"></div>
+              <span>Editorial</span>
+            </div>
+          </div>
+
+          <!-- Neubrutal Option -->
+          <div class="theme-card p-segment" data-style="neubrutalist" tabindex="0" role="button">
+            <div class="mini-wireframe mini-neubrutal">
+              <div class="mini-header"></div>
+              <div class="mini-body">
+                <div class="mini-col"></div>
+                <div class="mini-col"></div>
+              </div>
+              <div class="mini-footer">
+                <div class="mini-btn"></div>
+              </div>
+            </div>
+            <div class="theme-label">
+              <div class="radio-btn"></div>
+              <span>Neubrutal</span>
+            </div>
+          </div>
+
         </div>
-        <div class="p-segmented-control" id="style-segmented">
-          <button class="p-segment active" data-style="classic">Editorial</button>
-          <button class="p-segment" data-style="neubrutalist">Neubrutalist</button>
+      </section>
+    </div>
+
+    <!-- PAGE 2: SETTINGS -->
+    <div class="page page-settings hidden-right" id="page-settings">
+      <header class="p-page-header lca-widget" style="padding-bottom:8px;">
+        <div class="p-page-title" style="display:flex; justify-content:space-between; width:100%; align-items:center;">
+          <span>Settings</span>
+          <svg style="color:var(--lca-muted);" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
         </div>
-      </div>
-    </section>
+      </header>
+      
+      <!-- AI PROVIDER CARD -->
+      <section class="settings-card s-ai-card" style="margin-top: 12px;">
+        <div class="s-section-lbl">AI PROVIDER</div>
+        <div class="s-key-provider-row">
+          <div class="s-provider-brand">
+            <span class="s-groq-logo">groq</span>
+            <span class="s-provider-name">Groq API</span>
+          </div>
+          <div class="s-status-badge" id="groq-key-preview">Not configured</div>
+        </div>
+        
+        <div class="s-key-field-wrap" id="groq-key-input-row">
+          <input type="password" id="groq-key-input" class="p-key-input s-key-input" placeholder="gsk_..." autocomplete="off" spellcheck="false" />
+          <button class="icon-btn s-eye-btn" id="groq-key-eye" title="Toggle visibility">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+          </button>
+          <button class="icon-btn s-clear-btn" id="groq-key-clear" title="Clear Key" style="display:none;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+          </button>
+        </div>
+        <div id="groq-key-status" class="p-key-status" style="display:none;"></div>
+        <div class="s-key-footer">
+          <a href="https://console.groq.com/keys" target="_blank" class="s-get-key-link">Get free key &rarr;</a>
+        </div>
+      </section>
 
-    <!-- Stats Strip -->
-    <section class="p-stats lca-widget">
-      <div class="p-stat">
-        <div class="p-stat-value mono" id="stat-today">—</div>
-        <div class="p-stat-label">Today</div>
-      </div>
-      <div class="p-stat-sep"></div>
-      <div class="p-stat">
-        <div class="p-stat-value mono" id="stat-total">—</div>
-        <div class="p-stat-label">Total</div>
-      </div>
-      <div class="p-stat-sep"></div>
-      <div class="p-stat">
-        <div class="p-stat-value lca-tag-s">Free</div>
-        <div class="p-stat-label">Cost</div>
-      </div>
-    </section>
 
-    <!-- Footer -->
-    <footer class="p-footer lca-widget">
-      <span class="p-footer-text">orthex.dev</span>
-      <span class="p-footer-sep">·</span>
-      <span class="p-footer-text">v1.1.0</span>
-    </footer>
+      <!-- TRIGGERS CARD -->
+      <section class="settings-card s-triggers-card" style="margin-bottom: 24px;">
+        <div class="s-section-lbl">TRIGGERS</div>
+        <div class="p-card-group s-card-group">
+          <div class="p-toggle-row">
+            <div class="p-toggle-info">
+              <div class="s-tag s-tag--ac">AC</div>
+              <div class="p-toggle-desc-wrap">
+                <div class="p-toggle-main">Auto-analyze on pass</div>
+                <div class="p-toggle-sub">Show AI panel when solution passes</div>
+              </div>
+            </div>
+            <label class="p-switch">
+              <input type="checkbox" id="toggle-auto" />
+              <span class="p-switch-track"></span>
+            </label>
+          </div>
+          <div class="p-toggle-row">
+            <div class="p-toggle-info">
+              <div class="s-tag s-tag--wa">WA</div>
+              <div class="p-toggle-desc-wrap">
+                <div class="p-toggle-main">Tips on wrong answer</div>
+                <div class="p-toggle-sub">Improvement tips on failure</div>
+              </div>
+            </div>
+            <label class="p-switch">
+              <input type="checkbox" id="toggle-wa" />
+              <span class="p-switch-track"></span>
+            </label>
+          </div>
+          <div class="p-toggle-row" style="border-bottom:none;">
+            <div class="p-toggle-info">
+              <div class="s-tag s-tag--tle">TLE</div>
+              <div class="p-toggle-desc-wrap">
+                <div class="p-toggle-main">Hints on timeout</div>
+                <div class="p-toggle-sub">Efficiency suggestions on timeouts</div>
+              </div>
+            </div>
+            <label class="p-switch">
+              <input type="checkbox" id="toggle-tle" />
+              <span class="p-switch-track"></span>
+            </label>
+          </div>
+        </div>
+      </section>
+    </div>
 
+    <!-- PAGE 3: STATS -->
+    <div class="page page-stats hidden-right" id="page-stats">
+      <header class="p-page-header lca-widget">
+        <div class="p-page-title">Stats</div>
+      </header>
+
+      <section class="p-section lca-widget lca-no-border" style="padding-top: 16px;">
+        <div class="p-stats-hero">
+           <div class="p-streak-ring" id="streak-ring">
+             <svg viewBox="0 0 100 100" class="ring-svg">
+               <circle class="ring-bg" cx="50" cy="50" r="42"></circle>
+               <circle class="ring-fg" cx="50" cy="50" r="42" id="streak-circle" stroke-dasharray="264" stroke-dashoffset="0"></circle>
+             </svg>
+             <div class="p-streak-text">
+               <div class="p-streak-val mono" id="streak-val">Streak</div>
+             </div>
+           </div>
+           <div class="p-badge-free">Free ∞</div>
+        </div>
+
+        <div class="p-stats-grid" style="margin-top: 24px;">
+          <div class="p-stat-box">
+            <div class="p-stat-lbl">Today:</div>
+            <div class="p-stat-val mono" id="stat-val-today">0</div>
+          </div>
+          <div class="p-stat-box-divider"></div>
+          <div class="p-stat-box">
+            <div class="p-stat-lbl">All Time:</div>
+            <div class="p-stat-val mono" id="stat-val-total">0</div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Fixed Bottom Tab Bar -->
+    <nav class="tab-bar" id="tab-bar">
+      <button class="tab-item active" data-page="home">
+        <div class="tab-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        </div>
+        <div class="tab-label">Home</div>
+      </button>
+      <button class="tab-item" data-page="settings">
+        <div class="tab-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg>
+        </div>
+        <div class="tab-label">Settings</div>
+      </button>
+      <button class="tab-item" data-page="stats">
+        <div class="tab-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+        </div>
+        <div class="tab-label">Stats</div>
+      </button>
+    </nav>
   </div>
 
   <script src="popup.js"></script>
