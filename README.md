@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/orthex_presentation_banner.png" alt="Orthex: LeetCode AI Code Review & Big-O Checker Banner" width="100%">
+</p>
+
 # ⚡ Orthex: LeetCode AI Code Review & Big-O Checker
 
 Orthex is a free Chrome extension that runs a multi-pass AI debrief directly inside LeetCode's submission results page. After every submission — accepted or not — it analyzes your approach, plots your time and space complexity on an interactive graph, reviews your code style, and recommends what to study next. It uses Groq's fast inference API and runs entirely in your browser.
