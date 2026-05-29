@@ -1,9 +1,0 @@
-<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="primaryGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#4bb8fa" />
-      <stop offset="100%" stop-color="#1591dc" />
-    </linearGradient>
-  </defs>
-  <path d="M64 8C33.072 8 8 33.072 8 64C8 94.928 33.072 120 64 120C94.928 120 120 94.928 120 64C120 33.072 94.928 8 64 8ZM64 34C80.568 34 94 47.432 94 64C94 80.568 80.568 94 64 94C47.432 94 34 80.568 34 64C34 47.432 47.432 34 64 34Z" fill="url(#primaryGrad)"/>
-</svg>
