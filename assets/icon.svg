@@ -1,59 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60" width="128" height="128">
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <!-- Premium Gradients matching Orthex Design system -->
-    <linearGradient id="blue-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="primaryGrad" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#4bb8fa" />
       <stop offset="100%" stop-color="#1591dc" />
     </linearGradient>
-    <linearGradient id="deep-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#2c5ead" />
-      <stop offset="100%" stop-color="#1b3d75" />
-    </linearGradient>
-    <linearGradient id="teal-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#5db8a6" />
-      <stop offset="100%" stop-color="#3b7a6e" />
-    </linearGradient>
-    <filter id="drop-glow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="1.5" result="blur" />
-      <feComposite in="SourceGraphic" in2="blur" operator="over" />
-    </filter>
   </defs>
-
-  <!-- Canvas background (transparent for extension icon) -->
-  <g>
-    <!-- Row 0 -->
-    <rect x="5" y="5" width="8" height="8" rx="2" fill="url(#blue-grad)" filter="url(#drop-glow)" />
-    <rect x="15" y="5" width="8" height="8" rx="2" fill="url(#blue-grad)" />
-    <rect x="25" y="5" width="8" height="8" rx="2" fill="rgba(21, 145, 220, 0.12)" />
-    <rect x="35" y="5" width="8" height="8" rx="2" fill="rgba(21, 145, 220, 0.12)" />
-    <rect x="45" y="5" width="8" height="8" rx="2" fill="rgba(21, 145, 220, 0.12)" />
-
-    <!-- Row 1 -->
-    <rect x="5" y="15" width="8" height="8" rx="2" fill="url(#blue-grad)" />
-    <rect x="15" y="15" width="8" height="8" rx="2" fill="url(#deep-grad)" />
-    <rect x="25" y="15" width="8" height="8" rx="2" fill="url(#deep-grad)" />
-    <rect x="35" y="15" width="8" height="8" rx="2" fill="rgba(21, 145, 220, 0.12)" />
-    <rect x="45" y="15" width="8" height="8" rx="2" fill="rgba(21, 145, 220, 0.12)" />
-
-    <!-- Row 2 -->
-    <rect x="5" y="25" width="8" height="8" rx="2" fill="rgba(21, 145, 220, 0.12)" />
-    <rect x="15" y="25" width="8" height="8" rx="2" fill="url(#deep-grad)" />
-    <rect x="25" y="25" width="8" height="8" rx="2" fill="url(#teal-grad)" />
-    <rect x="35" y="25" width="8" height="8" rx="2" fill="url(#teal-grad)" />
-    <rect x="45" y="25" width="8" height="8" rx="2" fill="rgba(21, 145, 220, 0.12)" />
-
-    <!-- Row 3 -->
-    <rect x="5" y="35" width="8" height="8" rx="2" fill="rgba(21, 145, 220, 0.12)" />
-    <rect x="15" y="35" width="8" height="8" rx="2" fill="rgba(21, 145, 220, 0.12)" />
-    <rect x="25" y="35" width="8" height="8" rx="2" fill="url(#teal-grad)" />
-    <rect x="35" y="35" width="8" height="8" rx="2" fill="url(#teal-grad)" />
-    <rect x="45" y="35" width="8" height="8" rx="2" fill="rgba(21, 145, 220, 0.12)" />
-
-    <!-- Row 4 -->
-    <rect x="5" y="45" width="8" height="8" rx="2" fill="rgba(21, 145, 220, 0.12)" />
-    <rect x="15" y="45" width="8" height="8" rx="2" fill="rgba(21, 145, 220, 0.12)" />
-    <rect x="25" y="45" width="8" height="8" rx="2" fill="rgba(21, 145, 220, 0.12)" />
-    <rect x="35" y="45" width="8" height="8" rx="2" fill="rgba(21, 145, 220, 0.12)" />
-    <rect x="45" y="45" width="8" height="8" rx="2" fill="rgba(21, 145, 220, 0.12)" />
-  </g>
+  <path d="M64 8C33.072 8 8 33.072 8 64C8 94.928 33.072 120 64 120C94.928 120 120 94.928 120 64C120 33.072 94.928 8 64 8ZM64 34C80.568 34 94 47.432 94 64C94 80.568 80.568 94 64 94C47.432 94 34 80.568 34 64C34 47.432 47.432 34 64 34Z" fill="url(#primaryGrad)"/>
 </svg>
