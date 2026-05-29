@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/orthex_presentation_banner.png" alt="Orthex: LeetCode AI Code Review & Big-O Checker Banner" width="100%">
+  <img src="assets/orthex_presentation_banner.png" alt="Orthex: LeetCode AI Code Review & Big-O Checker Banner">
 </p>
 
 # ⚡ Orthex: LeetCode AI Code Review & Big-O Checker
