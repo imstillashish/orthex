@@ -652,7 +652,7 @@ Write ONLY the markdown text (NOT JSON). Follow this exact structure:
    - DO NOT write any block of code (\`\`\` code fences). You may only use inline code snippets.
 5. Then another horizontal divider: ---
 6. Then a section: ## Visual Example: Tracing the Code
-7. Create a beautiful, colorful top-to-bottom Mermaid flowchart (\`\`\`mermaid\\ngraph TD\\n...\\n\`\`\`) to visualize the core algorithm.
+7. Create a beautiful, colorful top-to-bottom Mermaid flowchart (\`\`\`mermaid\\ngraph TD\\n...\\n\`\`\`) to visualize the core algorithm. IMPORTANT: We are using Mermaid version 11.15.0. Ensure the syntax is strictly compatible with Mermaid v11.15.0. You MUST enclose all node labels in double quotes (e.g., A["Step 1 (Init)"]). Do NOT use unescaped special characters.
 8. Trace the code with 2 example inputs (Trace A: a valid/passing input, Trace B: an edge/failing input). Show step-by-step variable changes.
 
 Additional rules:
@@ -741,7 +741,7 @@ Write ONLY the markdown text (NOT JSON). Follow this exact structure:
    - DO NOT write any block of code (\`\`\` code fences). You may only use inline code snippets.
 5. Then another horizontal divider: ---
 6. Then a section: ## Visual Example: Tracing the Code
-7. Create a beautiful, colorful top-to-bottom Mermaid flowchart (\`\`\`mermaid\\ngraph TD\\n...\\n\`\`\`) to visualize the core algorithm.
+7. Create a beautiful, colorful top-to-bottom Mermaid flowchart (\`\`\`mermaid\\ngraph TD\\n...\\n\`\`\`) to visualize the core algorithm. IMPORTANT: We are using Mermaid version 11.15.0. Ensure the syntax is strictly compatible with Mermaid v11.15.0. You MUST enclose all node labels in double quotes (e.g., A["Step 1 (Init)"]). Do NOT use unescaped special characters.
 8. Trace the code with 2 example inputs (Trace A: a valid/passing input, Trace B: an edge/failing input). Show step-by-step variable changes.
 
 Additional rules:

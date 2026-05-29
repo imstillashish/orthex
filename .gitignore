@@ -13,3 +13,8 @@ BRAND.md
 
 # Test scripts (kept locally but ignored to avoid pushing API keys)
 test_*.js
+
+# Local development and scratch files
+node_modules/
+scratch_*.js
+test_mermaid.html

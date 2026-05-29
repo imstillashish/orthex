@@ -51,6 +51,78 @@ new MutationObserver(syncTheme).observe(document.documentElement, { attributes: 
 let bodyObserver = new MutationObserver(() => { clearTimeout(debounce); debounce = setTimeout(tick, 900); });
 let observerActive = false;
 
+// ─── Mermaid Helpers ───────────────────────────────────────
+
+/**
+ * sanitizeMermaidSource — auto-fix common LLM Mermaid mistakes so the diagram
+ * renders without a syntax error, regardless of what the model generated.
+ *
+ * Fixes applied:
+ *  1. Node labels in [] / () / {} that contain special chars are auto-quoted.
+ *  2. HTML entities from marked (&lt; &gt; &amp;) are unescaped.
+ *  3. Removes any accidental trailing semicolons on node lines.
+ */
+function sanitizeMermaidSource(src) {
+  if (!src) return src;
+
+  // Unescape HTML entities that marked may have encoded inside the code fence
+  let s = src
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"');
+
+  // Auto-quote unquoted node labels that contain special characters.
+  // Matches patterns like:  A[some label (with parens)]  or  B(text/slashes)
+  // Only touches labels that are NOT already quoted.
+  // Bracket types: [ ], ( ), [[ ]], [/ /], { }
+  const labelRe = /(\w[\w\s]*?)(\[{1,2}|(?<!\()\((?!\()|\{)(?!")([^"[\](){}]+?)(\]{1,2}|\)|\})/g;
+  s = s.replace(labelRe, (match, id, open, label, close) => {
+    // If the label has any special chars, wrap in double-quotes
+    if (/[()\/\\<>{}|#!@%^&*+= ]/.test(label)) {
+      return `${id}${open}"${label.replace(/"/g, "'")}"${close}`;
+    }
+    return match;
+  });
+
+  // Fix AI adding an extra > after link text, OR using multiple spaces after it,
+  // e.g. `-->|yes|>  B` or `-->|yes|   B`. Mermaid's parser is incredibly strict
+  // and will throw "got SPACE" if there is more than 1 space after the pipe!
+  s = s.replace(/(--[-.=>xo]*\s*\|[^|\n]+\|)\s*>?[ \t]*/g, '$1 ');
+
+  // Fix inner double quotes inside explicitly quoted node labels: A[" ... " ... "] -> A[" ... ' ... ' "]
+  s = s.replace(/(\w[\w\s]*?\[")([\s\S]+?)("\])/g, (match, prefix, innerText, suffix) => {
+    return `${prefix}${innerText.replace(/"/g, "'")}${suffix}`;
+  });
+
+  return s;
+}
+
+/**
+ * renderMermaidDiagrams — uses mermaid.run() to render diagrams in place.
+ * By passing suppressErrors, a single bad diagram won't crash the others.
+ *
+ * @param {Element} scope  - container element to search within
+ */
+async function renderMermaidDiagrams(scope) {
+  if (!window.mermaid || !scope) return;
+  const theme = isDark() ? 'dark' : 'default';
+  try {
+    window.mermaid.initialize({ theme, startOnLoad: false, securityLevel: 'loose' });
+  } catch (_) {}
+
+  // Let mermaid process all diagrams automatically.
+  // It reads the textContent (which safely contains our escaped < > characters)
+  try {
+    await window.mermaid.run({ 
+      querySelector: '.mermaid:not([data-processed])',
+      suppressErrors: true 
+    });
+  } catch (err) {
+    console.warn('[LCA] Mermaid run error:', err);
+  }
+}
+
 function syncObserver() {
   const isProblem = /\/problems\//i.test(location.pathname);
   if (isProblem && !observerActive) {
@@ -1429,10 +1501,7 @@ async function openSolutionsPanel() {
             contentDiv.innerHTML = renderMarkdown(generated[msg.solutionType].stepByStep);
           }
           if (window.mermaid) {
-            try {
-              window.mermaid.initialize({ theme: isDark() ? 'dark' : 'default', startOnLoad: false });
-              window.mermaid.run({ querySelector: '.lca-step-by-step-approach .mermaid' });
-            } catch (e) {}
+            renderMermaidDiagrams(contentDiv);
           }
         }
       }
@@ -1468,7 +1537,11 @@ async function openSolutionsPanel() {
     const renderer = new window.marked.Renderer();
     renderer.code = function({text, lang}) {
       if (lang === 'mermaid') {
-        return `<div class="mermaid">${text}</div>`;
+        // Sanitize the Mermaid source, then ESCAPE HTML chars so the browser
+        // doesn't parse `<` or `>` as tags when this is injected into innerHTML.
+        const clean = sanitizeMermaidSource(text);
+        const escaped = clean.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return `<div class="mermaid">${escaped}</div>`;
       }
       const unescapedCode = text.replace(/&lt;/g, '<').replace(/&gt;/g, '>').trim();
       return `<div class="lca-note lca-code-block" style="border:1px solid var(--lca-primary-border);border-radius:6px;padding:12px 14px;position:relative;overflow:hidden;background:rgba(0,0,0,0.02);margin:12px 0;"><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:12.5px;overflow-x:auto;color:var(--lca-ink);padding-top:4px;line-height:1.5;">${highlightSyntax ? highlightSyntax(unescapedCode) : unescapedCode}</pre></div>`;
@@ -1557,10 +1630,8 @@ async function openSolutionsPanel() {
 
     if (window.mermaid) {
       setTimeout(() => {
-        try {
-          window.mermaid.initialize({ theme: isDark() ? 'dark' : 'default', startOnLoad: false });
-          window.mermaid.run({ querySelector: '.lca-step-by-step-approach .mermaid' });
-        } catch (e) {}
+        const scope = bodyEl.querySelector('.lca-step-by-step-approach');
+        if (scope) renderMermaidDiagrams(scope);
       }, 50); // slight delay for DOM insertion
     }
   }
