@@ -143,6 +143,7 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
   if (namespace === 'sync' && changes.uiStyle) {
     const newStyle = changes.uiStyle.newValue || 'classic';
     
+    // Main Analysis Panel
     const container = document.getElementById('lca-main-container');
     if (container) {
       if (newStyle === 'neubrutalist') {
@@ -152,12 +153,33 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
       }
     }
     
+    // Main Analysis Button
     const btn = document.getElementById('lca-analysis-btn');
     if (btn) {
       if (newStyle === 'neubrutalist') {
         btn.classList.add('lca-neubrutalist');
       } else {
         btn.classList.remove('lca-neubrutalist');
+      }
+    }
+
+    // Solutions Panel
+    const solContainer = document.getElementById('lca-solutions-container');
+    if (solContainer) {
+      if (newStyle === 'neubrutalist') {
+        solContainer.classList.add('lca-neubrutalist');
+      } else {
+        solContainer.classList.remove('lca-neubrutalist');
+      }
+    }
+
+    // Solutions Button
+    const solBtn = document.getElementById('lca-solutions-btn');
+    if (solBtn) {
+      if (newStyle === 'neubrutalist') {
+        solBtn.classList.add('lca-neubrutalist');
+      } else {
+        solBtn.classList.remove('lca-neubrutalist');
       }
     }
   }
