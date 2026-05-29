@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Orthex</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+
+  <!-- The Cream Canvas base with primary border dots -->
+  <div class="lca-container">
+    <div id="lca-g-interactive" class="lca-g-interactive"></div>
+    
+    <!-- Header -->
+    <header class="p-header lca-widget">
+      <div class="p-header-icon">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+        </svg>
+      </div>
+      <div class="p-header-info">
+        <div class="p-header-title">Orthex</div>
+        <div class="p-header-sub" id="provider-label">Powered by GLM-4.5</div>
+      </div>
+      <div class="p-status-dot p-status-dot--active" id="status-dot" title="AI ready"></div>
+    </header>
+
+    <!-- Groq API Key Section -->
+    <section class="p-section lca-widget" id="groq-key-section">
+      <div class="lca-wh" style="justify-content: space-between;">
+        <div class="lca-wh-title">Groq API Key</div>
+      </div>
+      <div class="p-key-row">
+        <input type="password" id="groq-key-input" class="p-key-input" placeholder="gsk_..." autocomplete="off" spellcheck="false" />
+        <button id="groq-save-btn" class="p-key-save-btn">Save</button>
+      </div>
+      <div id="groq-key-status" class="p-key-status"></div>
+      <div class="lca-note lca-note--info" style="margin-top:8px;">
+        <div class="lca-note-txt" style="font-size:11px;">Required. Get a free key at <a href="https://console.groq.com/keys" target="_blank" style="color:var(--lca-primary);">console.groq.com</a>.</div>
+      </div>
+    </section>
+
+    <!-- Trigger Settings -->
+    <section class="p-section lca-widget">
+      <div class="lca-wh">
+        <div class="lca-wh-title">Analysis Settings</div>
+      </div>
+
+      <div class="p-toggle-row">
+        <div class="p-toggle-info">
+          <div class="p-toggle-label">Auto-analyze on Accept</div>
+          <div class="p-toggle-desc">Show AI panel when solution passes</div>
+        </div>
+        <label class="p-switch">
+          <input type="checkbox" id="toggle-auto" />
+          <span class="p-switch-track"></span>
+        </label>
+      </div>
+
+      <div class="p-toggle-row">
+        <div class="p-toggle-info">
+          <div class="p-toggle-label">Analyze Wrong Answers</div>
+          <div class="p-toggle-desc">Improvement tips on incorrect attempts</div>
+        </div>
+        <label class="p-switch">
+          <input type="checkbox" id="toggle-wa" />
+          <span class="p-switch-track"></span>
+        </label>
+      </div>
+
+      <div class="p-toggle-row">
+        <div class="p-toggle-info">
+          <div class="p-toggle-label">Analyze TLE / MLE</div>
+          <div class="p-toggle-desc">Efficiency suggestions on timeouts</div>
+        </div>
+        <label class="p-switch">
+          <input type="checkbox" id="toggle-tle" />
+          <span class="p-switch-track"></span>
+        </label>
+      </div>
+
+      <div class="p-toggle-row">
+        <div class="p-toggle-info">
+          <div class="p-toggle-label">UI Theme Style</div>
+          <div class="p-toggle-desc">Switch between editorial and neubrutalist</div>
+        </div>
+        <div class="p-segmented-control" id="style-segmented">
+          <button class="p-segment active" data-style="classic">Editorial</button>
+          <button class="p-segment" data-style="neubrutalist">Neubrutalist</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats Strip -->
+    <section class="p-stats lca-widget">
+      <div class="p-stat">
+        <div class="p-stat-value mono" id="stat-today">—</div>
+        <div class="p-stat-label">Today</div>
+      </div>
+      <div class="p-stat-sep"></div>
+      <div class="p-stat">
+        <div class="p-stat-value mono" id="stat-total">—</div>
+        <div class="p-stat-label">Total</div>
+      </div>
+      <div class="p-stat-sep"></div>
+      <div class="p-stat">
+        <div class="p-stat-value lca-tag-s">Free</div>
+        <div class="p-stat-label">Cost</div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="p-footer lca-widget">
+      <span class="p-footer-text">orthex.dev</span>
+      <span class="p-footer-sep">·</span>
+      <span class="p-footer-text">v1.1.0</span>
+    </footer>
+
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+# Agent internals
+.agent/
+.agents/
+graphify-out/
+scratch/
+skills-lock.json
+specs/
+idea-validation-agents/
+
+# Resume and personal docs
+*.tex
+BRAND.md
+
+# Test scripts (kept locally but ignored to avoid pushing API keys)
+test_*.js
