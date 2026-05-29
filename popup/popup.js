@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ── Load saved settings ───────────────────────────────────
 function loadSettings() {
-  chrome.storage.sync.get(['autoAnalyze', 'analyzeOnWrongAnswer', 'analyzeOnTLE', 'uiStyle'], (result) => {
+  chrome.storage.sync.get(['autoAnalyze', 'analyzeOnWrongAnswer', 'analyzeOnTLE', 'uiStyle', 'theme'], (result) => {
     document.getElementById('toggle-auto').checked = result.autoAnalyze !== false;
     document.getElementById('toggle-wa').checked   = result.analyzeOnWrongAnswer !== false;
     document.getElementById('toggle-tle').checked  = result.analyzeOnTLE !== false;
@@ -20,6 +20,10 @@ function loadSettings() {
     const currentStyle = result.uiStyle || 'classic';
     updatePopupStyleActiveSegment(currentStyle);
     applyPopupVisualTheme(currentStyle);
+
+    const currentTheme = result.theme || 'light';
+    updatePopupThemeActiveSegment(currentTheme);
+    applyPopupTheme(currentTheme);
   });
 
   // Save immediately on any toggle change
@@ -35,6 +39,17 @@ function loadSettings() {
       updatePopupStyleActiveSegment(chosenStyle);
       applyPopupVisualTheme(chosenStyle);
       chrome.storage.sync.set({ uiStyle: chosenStyle });
+    });
+  });
+
+  // Setup theme segmented button click listeners
+  const themeSegments = document.querySelectorAll('#theme-segmented .p-segment');
+  themeSegments.forEach(seg => {
+    seg.addEventListener('click', (e) => {
+      const chosenTheme = e.target.getAttribute('data-theme');
+      updatePopupThemeActiveSegment(chosenTheme);
+      applyPopupTheme(chosenTheme);
+      chrome.storage.sync.set({ theme: chosenTheme });
     });
   });
 }
@@ -55,6 +70,25 @@ function applyPopupVisualTheme(style) {
     document.body.classList.add('lca-neubrutalist');
   } else {
     document.body.classList.remove('lca-neubrutalist');
+  }
+}
+
+function updatePopupThemeActiveSegment(theme) {
+  const segments = document.querySelectorAll('#theme-segmented .p-segment');
+  segments.forEach(seg => {
+    if (seg.getAttribute('data-theme') === theme) {
+      seg.classList.add('active');
+    } else {
+      seg.classList.remove('active');
+    }
+  });
+}
+
+function applyPopupTheme(theme) {
+  if (theme === 'dark') {
+    document.body.classList.add('lca-dark');
+  } else {
+    document.body.classList.remove('lca-dark');
   }
 }
 
