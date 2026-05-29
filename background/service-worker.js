@@ -2,8 +2,7 @@
 // Orthex — Service Worker (Background)
 // 3 sequential focused API calls: Approach → Efficiency → Code Style
 // Each call is small (~200-300 tokens) to avoid timeouts
-// API key is stored in chrome.storage.sync (BYOK model)
-// Supports two providers: OpenRouter (default) and Groq (fast)
+// Powered by Groq using llama-3.3-70b-versatile (BYOK model)
 // ============================================================
 
 const GROQ_MODEL         = 'llama-3.3-70b-versatile';
@@ -125,6 +124,47 @@ function getSubmissionKey(data) {
   return `${data.problemTitle}_${data.language}_${data.code.slice(0, 100)}_${data.verdict}`;
 }
 
+// cyrb53 hash function: fast, non-cryptographic 53-bit hash
+function cyrb53(str, seed = 0) {
+  let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
+  for (let i = 0, ch; i < str.length; i++) {
+    ch = str.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507);
+  h1 ^= Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507);
+  h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return 4294967296 * (2097151 & h2) + (h1 >>> 0);
+}
+
+// Chrome storage local caching helpers
+async function getCache(key) {
+  return new Promise((resolve) => {
+    chrome.storage.local.get([key], (result) => {
+      if (chrome.runtime.lastError) {
+        console.warn('[LCA] Cache read error:', chrome.runtime.lastError);
+        resolve(null);
+      } else {
+        resolve(result[key] || null);
+      }
+    });
+  });
+}
+
+async function setCache(key, value) {
+  return new Promise((resolve) => {
+    chrome.storage.local.set({ [key]: value }, () => {
+      if (chrome.runtime.lastError) {
+        console.warn('[LCA] Cache write error:', chrome.runtime.lastError);
+      }
+      resolve();
+    });
+  });
+}
+
+
 async function handleFullAnalysis(data) {
   const cacheKey = `analysis_${cyrb53(data.problemTitle + data.language + data.code)}`;
   const cached = await getCache(cacheKey);
@@ -192,7 +232,7 @@ async function callGroqWithRetry(prompt, maxTokens = 800, retries = 5, model = G
 
       const res = await callGroq(prompt, maxTokens, model);
 
-      // Extract content from OpenRouter structure
+      // Extract content from response structure
       const content = res?.choices?.[0]?.message?.content;
       if (!content || content.trim().length < 2) {
         throw new Error('EMPTY_RESPONSE');

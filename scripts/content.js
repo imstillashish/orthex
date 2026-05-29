@@ -1190,7 +1190,7 @@ function errHtml(msg, type, id, data, renderFn) {
   if (isInvalidKey) {
     displayMsg = 'Invalid or missing API key.';
     extraHtml = `<div style="margin-top:6px;font-size:12px;color:var(--lca-text-sub);">
-      Click the <strong>Orthex extension icon</strong> in your toolbar to enter a valid OpenRouter API key.
+      Click the <strong>Orthex extension icon</strong> in your toolbar to enter a valid Groq API key.
     </div>`;
   } else if (isRateLimit) {
     displayMsg = 'Rate limited by API provider. Please wait and retry.';
