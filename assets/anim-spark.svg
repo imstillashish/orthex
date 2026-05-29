@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16">
+  <style>
+    @keyframes lightning-shimmer {
+      0%, 100% { opacity: 0.6; transform: scale(0.95); }
+      50% { opacity: 1; transform: scale(1.05); filter: drop-shadow(0 0 3px #1591dc); }
+    }
+    .bolt {
+      transform-origin: center;
+      animation: lightning-shimmer 1.5s infinite ease-in-out;
+      fill: #1591dc;
+    }
+  </style>
+  <path class="bolt" d="M11 21h-1l1-7H5.5L13 3h1l-1 7h5.5L11 21z"/>
+</svg>

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16">
+  <style>
+    @keyframes draw-check {
+      0% { stroke-dashoffset: 24; }
+      100% { stroke-dashoffset: 0; }
+    }
+    .check {
+      stroke: #2b9a66;
+      stroke-width: 2.5;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 24;
+      animation: draw-check 2s infinite ease-in-out;
+    }
+    .circle {
+      stroke: #dbe4eb;
+      stroke-width: 1.5;
+      fill: none;
+    }
+  </style>
+  <circle class="circle" cx="12" cy="12" r="10" />
+  <path class="check" d="M6 12l4 4 8-8" />
+</svg>

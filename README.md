@@ -1,84 +1,160 @@
-<p align="center">
-  <img src="assets/orthex_presentation_banner.png" alt="Orthex: LeetCode AI Code Review & Big-O Checker Banner">
-</p>
+<div align="center">
+  <img src="assets/orthex_presentation_banner.png" alt="Orthex Banner" width="100%">
+  <br/><br/>
 
-# ⚡ Orthex: LeetCode AI Code Review & Big-O Checker
+  <img src="https://img.shields.io/badge/AI%20Powered-Groq%20%2F%20LLaMA%203.3-1591dc?style=for-the-badge&logo=lightning&logoColor=white" alt="AI Powered"/>
+  <img src="https://img.shields.io/badge/Chrome%20Extension-Manifest%20V3-2c5ead?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Chrome Extension"/>
+  <img src="https://img.shields.io/badge/LeetCode-Integrated-5db8a6?style=for-the-badge&logo=leetcode&logoColor=white" alt="LeetCode"/>
+  <img src="https://img.shields.io/badge/Cost-Free-e8a55a?style=for-the-badge&logo=opensourceinitiative&logoColor=white" alt="Free"/>
+  <br/><br/>
 
-Orthex is a free Chrome extension that runs a multi-pass AI debrief directly inside LeetCode's submission results page. After every submission — accepted or not — it analyzes your approach, plots your time and space complexity on an interactive graph, reviews your code style, and recommends what to study next. It uses Groq's fast inference API and runs entirely in your browser.
-
-No account. No server. No cost.
+  <h1>
+    <strong><span style="color:#1591dc"><img src="assets/anim-tetris.svg" width="32" height="32" align="middle" alt="Tetris"/> Orthex</span></strong>
+  </h1>
+  <p><em>LeetCode AI Code Review &amp; Big-O Checker</em></p>
+  <p>
+    A multi-pass AI debrief that runs directly inside LeetCode.<br/>
+    Analyze your approach. Visualize complexity. Learn what to study next.
+  </p>
+  <p>
+    <strong>No account &nbsp;·&nbsp; No server &nbsp;·&nbsp; No cost</strong>
+  </p>
+</div>
 
 ---
 
 ## What it does
 
-Orthex runs three sequential analysis passes on your submission, then generates a learning path:
+Orthex runs **three sequential analysis passes** on your submission, then generates a personalized learning path.
 
-**Approach analysis** — Tags your current algorithmic technique (DFS, DP, Two Pointers, etc.), compares it against the optimal approach, distills the core insight of the problem into one sentence, and leaves you with one follow-up question to push your thinking further.
+<table>
+  <thead>
+    <tr>
+      <th style="background:#1591dc;color:#fff;padding:8px 14px">Pass</th>
+      <th style="background:#1591dc;color:#fff;padding:8px 14px">Feature</th>
+      <th style="background:#1591dc;color:#fff;padding:8px 14px">What you get</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td align="center"><kbd>01</kbd></td>
+      <td>
+        <img src="assets/anim-spark.svg" width="16" height="16" align="middle" style="margin-right:8px;" alt="AI"/>
+        <strong>Approach Analysis</strong>
+      </td>
+      <td>Identifies your algorithmic technique (DFS, DP, Two Pointers…), compares it to the optimal, and leaves you with one sharp follow-up question.</td>
+    </tr>
+    <tr>
+      <td align="center"><kbd>02</kbd></td>
+      <td>
+        <img src="assets/anim-chart.svg" width="16" height="16" align="middle" style="margin-right:8px;" alt="Chart"/>
+        <strong>Complexity Visualization</strong>
+      </td>
+      <td>Estimates your current time &amp; space complexity and the theoretical optimum, plotting both on an animated SVG graph — O(1) → O(2ⁿ).</td>
+    </tr>
+    <tr>
+      <td align="center"><kbd>03</kbd></td>
+      <td>
+        <img src="assets/anim-check.svg" width="16" height="16" align="middle" style="margin-right:8px;" alt="Code"/>
+        <strong>Code Style Review</strong>
+      </td>
+      <td>Rates readability and structure: <code>Excellent</code> / <code>Good</code> / <code>Fair</code> / <code>Poor</code> — with concise, actionable critique.</td>
+    </tr>
+    <tr>
+      <td align="center"><kbd>04</kbd></td>
+      <td>
+        <img src="assets/anim-path.svg" width="16" height="16" align="middle" style="margin-right:8px;" alt="Path"/>
+        <strong>Learning Path</strong>
+      </td>
+      <td>Recommends 2–3 specific LeetCode problems and the concepts behind them based on what the analysis found.</td>
+    </tr>
+    <tr>
+      <td align="center"><kbd>✦</kbd></td>
+      <td>
+        <img src="assets/anim-gear.svg" width="16" height="16" align="middle" style="margin-right:8px;" alt="Solutions"/>
+        <strong>Solutions</strong>
+      </td>
+      <td>Generates <em>Intern · L5 Engineer · Staff Architect</em> approaches, streamed with step-by-step Mermaid flowchart explanations.</td>
+    </tr>
+  </tbody>
+</table>
 
-**Complexity visualization** — Estimates your current time and space complexity and the theoretical optimum, then plots both on an animated SVG graph so you can see exactly where your solution sits on the O(1) → O(2ⁿ) curve. This is not a badge. It is a real interactive chart.
-
-**Code style review** — Rates your code on readability and structure (Excellent / Good / Fair / Poor) and provides one or two sentences of actionable critique, the kind a senior engineer would give in a code review.
-
-**Learning path** — Recommends two or three specific LeetCode problems to try next and the underlying concepts to review, based on what the analysis found.
-
-Orthex handles all LeetCode verdicts: Accepted, Wrong Answer, Time Limit Exceeded, Memory Limit Exceeded, Runtime Error, and Compile Error. The most useful feedback often comes from failed submissions.
+> **Supported verdicts:** 
+> <img src="https://www.google.com/s2/favicons?domain=leetcode.com&sz=16" width="16" height="16" align="middle" alt="LeetCode"/> Accepted &nbsp;·&nbsp; Wrong Answer &nbsp;·&nbsp; TLE &nbsp;·&nbsp; MLE &nbsp;·&nbsp; Runtime Error &nbsp;·&nbsp; Compile Error
 
 ---
 
 ## How it works
 
-The extension injects a content script on LeetCode's submission pages. When a result loads, it extracts the problem title, difficulty, language, verdict, runtime, memory usage, and your submitted code. It then sends that context to Groq's API (`llama-3.3-70b-versatile`) via a single structured prompt and parses the JSON response into four analysis panels. For solution generation, it runs two sequential passes: one to generate code, one to stream a step-by-step markdown explanation with a Mermaid flowchart.
-
-Results are cached in `chrome.storage.local` so repeat views of the same submission do not consume API quota.
+```
+Submit on LeetCode
+        ↓
+  content.js extracts problem title, difficulty,
+  language, verdict, runtime, memory, and code
+        ↓
+  service-worker.js sends a structured prompt
+  to Groq  →  llama-3.3-70b-versatile
+        ↓
+  JSON response parsed into 4 analysis panels
+        ↓
+  Result cached in chrome.storage.local
+  (repeat views cost zero API tokens)
+```
 
 ---
 
 ## Requirements
 
-- Google Chrome (or Chromium-based browser)
-- A free [Groq API key](https://console.groq.com/keys) — the free tier is more than sufficient for daily LeetCode practice
+- <img src="https://www.google.com/s2/favicons?domain=google.com&sz=16" width="16" height="16" align="middle" alt="Chrome"/> **Browser**: Google Chrome or any Chromium-based browser
+- <img src="https://www.google.com/s2/favicons?domain=groq.com&sz=16" width="16" height="16" align="middle" alt="Groq"/> **API Key**: A free [Groq API key](https://console.groq.com/keys) — the free tier is more than enough for daily practice
 
 ---
 
 ## Installation
 
-Orthex is not yet published to the Chrome Web Store. Load it as an unpacked extension:
+> Orthex is not yet published to the Chrome Web Store. Load it as an unpacked extension:
 
-1. Download or clone this repository to your machine.
-2. Open Chrome and navigate to `chrome://extensions/`.
-3. Enable **Developer mode** using the toggle in the top right corner.
-4. Click **Load unpacked** and select the project folder.
-5. The Orthex icon will appear in your Chrome toolbar.
+1. Download or clone this repository.
+2. Open Chrome → `chrome://extensions/`
+3. Enable **Developer mode** (toggle, top-right).
+4. Click **Load unpacked** → select the project folder.
+5. The Orthex icon appears in your toolbar.
 
 **Configure your API key:**
 
-1. Click the Orthex icon in the toolbar.
-2. Paste your Groq API key into the field and click **Save**.
-3. The status indicator turns green when the key is stored. The key is saved in `chrome.storage.sync` and never leaves your browser.
+1. Click the Orthex icon.
+2. Paste your Groq API key → click **Save**.
+3. The status indicator turns `🟢 green` when stored. The key lives in `chrome.storage.sync` and never leaves your browser.
 
 ---
 
 ## Usage
 
-Go to any [LeetCode problem](https://leetcode.com/problems/), write a solution, and submit it. When the submission result page loads:
+Navigate to any [LeetCode problem](https://leetcode.com/problems/), write a solution, and submit.
 
-- **Auto mode (default):** The analysis panel appears automatically for Accepted, Wrong Answer, and TLE verdicts. You can configure which verdicts trigger auto-analysis in the extension settings.
-- **Manual mode:** Click the **Analysis** button next to the Solution button to trigger analysis on demand. Click it again to dismiss the panel.
-
-For solution generation, click the **Solutions** button on the problem description panel. Orthex generates two or three distinct approaches (Intern, L5 Engineer, Staff Architect) and streams a step-by-step explanation with a Mermaid flowchart for each.
+| Mode | How to trigger | Behavior |
+|---|---|---|
+| <img src="https://www.google.com/s2/favicons?domain=developer.chrome.com&sz=16" width="16" height="16" align="middle" alt="Extension"/> **Auto** *(default)* | Submit a solution | Panel appears automatically for Accepted, WA, and TLE. Configurable in settings. |
+| <img src="https://www.google.com/s2/favicons?domain=developer.chrome.com&sz=16" width="16" height="16" align="middle" alt="Extension"/> **Manual** | Click **Analysis** button | Trigger on demand. Click again to dismiss. |
+| <img src="https://www.google.com/s2/favicons?domain=leetcode.com&sz=16" width="16" height="16" align="middle" alt="LeetCode"/> **Solutions** | Click **Solutions** button | Streams 2–3 approaches with Mermaid flowcharts. |
 
 ---
 
 ## Privacy
 
-Your code is sent directly from your browser to Groq's API. Orthex has no backend server, no database, and no telemetry. Your API key is stored locally in Chrome's sync storage. We never see your code.
+Your code goes **directly from your browser → Groq's API**. Orthex has:
 
-The BYOK (Bring Your Own Key) model is not a workaround — it is the architecture. We will not offer a tier that routes your code through our servers.
+- ✦ No backend server
+- ✦ No database
+- ✦ No telemetry
+
+Your API key is stored locally in Chrome's sync storage. **We never see your code.**
+
+> The BYOK (Bring Your Own Key) model is not a workaround — it is the architecture. We will not offer a tier that routes your code through our servers.
 
 ---
 
-## File structure
+## File Structure
 
 ```text
 ├── manifest.json              — Chrome Extension Manifest V3
@@ -97,21 +173,22 @@ The BYOK (Bring Your Own Key) model is not a workaround — it is the architectu
 │   ├── popup.js               — API key storage, settings logic
 │   └── popup.css              — Popup styles
 ├── assets/
-│   ├── icon-16.png
-│   ├── icon-48.png
-│   └── icon-128.png
+│   └── icon.svg               — Premium Tetris brand icon
 └── lib/
-    ├── marked.min.js          — Markdown renderer for step-by-step explanations
-    └── mermaid.min.js         — Flowchart renderer for algorithm visualizations
+    ├── marked.min.js          — Markdown renderer
+    └── mermaid.min.js         — Flowchart renderer
 ```
 
 ---
 
-## Model and API
+## Model & API
 
-Orthex uses `llama-3.3-70b-versatile` via Groq. Each full analysis uses approximately 800 tokens (prompt + response). Solution generation with step-by-step explanations uses up to 4,000 tokens per solution.
-
-Groq's free tier is sufficient for typical daily practice. The service worker includes exponential backoff retry logic for rate limit errors.
+| Property | Value |
+|---|---|
+| <img src="https://www.google.com/s2/favicons?domain=meta.com&sz=16" width="16" height="16" align="middle" alt="Meta"/> **Model** | `llama-3.3-70b-versatile` via Groq |
+| **Tokens / analysis** | ~800 (prompt + response) |
+| **Tokens / solution** | Up to 4,000 per approach |
+| <img src="https://www.google.com/s2/favicons?domain=groq.com&sz=16" width="16" height="16" align="middle" alt="Groq"/> **Rate limit handling** | Exponential backoff in service worker |
 
 ---
 
@@ -119,17 +196,17 @@ Groq's free tier is sufficient for typical daily practice. The service worker in
 
 | Permission | Reason |
 |---|---|
-| `storage` | Store your API key and analysis cache |
-| `unlimitedStorage` | Cache analysis results across many submissions |
-| `activeTab` | Read the current LeetCode submission page |
-| `scripting` | Inject the analysis panel into the page |
-| `https://leetcode.com/*` | Run on LeetCode problem and submission pages |
-| `https://api.groq.com/*` | Send requests to Groq's API |
+| <img src="https://www.google.com/s2/favicons?domain=developer.chrome.com&sz=16" width="16" height="16" align="middle" alt="Chrome"/> `storage` | Store your API key and analysis cache |
+| <img src="https://www.google.com/s2/favicons?domain=developer.chrome.com&sz=16" width="16" height="16" align="middle" alt="Chrome"/> `unlimitedStorage` | Cache results across many submissions |
+| <img src="https://www.google.com/s2/favicons?domain=developer.chrome.com&sz=16" width="16" height="16" align="middle" alt="Chrome"/> `activeTab` | Read the current LeetCode submission page |
+| <img src="https://www.google.com/s2/favicons?domain=developer.chrome.com&sz=16" width="16" height="16" align="middle" alt="Chrome"/> `scripting` | Inject the analysis panel into the page |
+| <img src="https://www.google.com/s2/favicons?domain=leetcode.com&sz=16" width="16" height="16" align="middle" alt="LeetCode"/> `https://leetcode.com/*` | Run on LeetCode problem and submission pages |
+| <img src="https://www.google.com/s2/favicons?domain=groq.com&sz=16" width="16" height="16" align="middle" alt="Groq"/> `https://api.groq.com/*` | Send requests to Groq's API |
 
 ---
 
 ## Limitations
 
-- Orthex reads your submitted code from the DOM. On some LeetCode UI updates, the code extraction selector may break. If the panel shows an analysis based on stats only, it means the code block was not found in the page.
-- The AI analysis reflects the model's understanding of algorithmic patterns. Treat the complexity estimates and approach suggestions as a starting point for your own thinking, not as ground truth.
-- Solution generation streams a step-by-step Mermaid diagram. Mermaid syntax errors in complex diagrams are caught and suppressed; the explanation text still renders.
+- **DOM dependency** — Orthex reads submitted code from the DOM. LeetCode UI updates may break the code extraction selector. If only stats appear without code, the selector likely changed.
+- **AI estimates** — Complexity grades and approach suggestions reflect the model's pattern recognition. Treat them as a starting point, not absolute ground truth.
+- **Mermaid edge cases** — Syntax errors in complex auto-generated diagrams are caught and suppressed. The step-by-step explanation text still renders.

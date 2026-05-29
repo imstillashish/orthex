@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32">
+  <style>
+    @keyframes lightning-glow {
+      0%, 100% { filter: drop-shadow(0 0 2px rgba(21, 145, 220, 0.4)); opacity: 0.9; }
+      50% { filter: drop-shadow(0 0 8px rgba(21, 145, 220, 0.9)); opacity: 1; }
+    }
+    .bolt {
+      animation: lightning-glow 2s infinite ease-in-out;
+      fill: #1591dc;
+    }
+  </style>
+  <path class="bolt" d="M12 2L2 14h9v8l10-12h-9z"/>
+</svg>

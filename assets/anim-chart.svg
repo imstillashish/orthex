@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16">
+  <style>
+    @keyframes pulse-dot {
+      0%, 100% { r: 2px; opacity: 0.5; }
+      50% { r: 4px; opacity: 1; filter: drop-shadow(0 0 2px #5db8a6); }
+    }
+    @keyframes draw-curve {
+      0% { stroke-dashoffset: 20; }
+      100% { stroke-dashoffset: 0; }
+    }
+    .curve {
+      stroke: #5db8a6;
+      stroke-width: 2px;
+      fill: none;
+      stroke-dasharray: 20;
+      animation: draw-curve 3s infinite linear;
+    }
+    .dot {
+      fill: #5db8a6;
+      animation: pulse-dot 1.5s infinite ease-in-out;
+    }
+  </style>
+  <path stroke="#ccc" stroke-width="1.5" d="M2 22h20M2 2h0" />
+  <path class="curve" d="M2 20c8 0, 12-10, 18-16" />
+  <circle class="dot" cx="20" cy="4" r="3" />
+</svg>
