@@ -1,0 +1,235 @@
+/* ============================================================
+   Neubrutalism Theme Overrides
+   Based on DESIGN6.md
+   ============================================================ */
+
+/* Root overrides when within .theme-neubrutal */
+.theme-neubrutal,
+.mock-popup.theme-neubrutal {
+  --lca-primary: #2196F3;
+  --lca-primary-active: #1976D2;
+  --lca-primary-border: #000000;
+  
+  --lca-bg: #FFEB3B; /* Yellow background */
+  --lca-surface-raised: #FFFFFF;
+  --lca-surface-card: #FFFFFF;
+  
+  --lca-text: #000000;
+  --lca-text-head: #000000;
+  --lca-text-label: #000000;
+  --lca-text-dim: #000000;
+  
+  --lca-border: #000000;
+  --lca-card-border: #000000;
+  --lca-card-val: #000000;
+  
+  --lca-tag-bg: #FFFFFF;
+  --lca-tag-border: #000000;
+
+  --lca-success: #5db872;
+  --lca-error: #FF5252;
+  --lca-warning: #FFEB3B;
+
+  /* Sharp corners */
+  --lca-r-xs: 0px;
+  --lca-r-sm: 0px;
+  --lca-r-md: 0px;
+  --lca-r-lg: 0px;
+  --lca-r-xl: 0px;
+
+  /* Font overrides to ensure sans-serif everywhere */
+  font-family: -apple-system, sans-serif !important;
+}
+
+/* Background gradient overrides (no gradients allowed) */
+.theme-neubrutal .lca-gradient-bg,
+.theme-neubrutal .lca-global-bg {
+  background: var(--lca-bg) !important;
+}
+.theme-neubrutal .lca-grad-blob,
+.theme-neubrutal .lca-g-interactive {
+  display: none !important;
+}
+
+/* Widget and Component Styles */
+.theme-neubrutal .lca-widget {
+  background: #FFFFFF !important;
+  border: 3px solid #000000 !important;
+  box-shadow: 4px 4px 0 #000000 !important;
+  border-radius: 0px !important;
+}
+
+.theme-neubrutal .lca-card {
+  background: #FFFFFF !important;
+  border: 3px solid #000000 !important;
+  box-shadow: 4px 4px 0 #000000 !important;
+  border-radius: 0px !important;
+}
+
+/* Headings and specific overrides */
+.theme-neubrutal .lca-wh-title,
+.theme-neubrutal .lca-card-lbl,
+.theme-neubrutal .lca-card-val,
+.theme-neubrutal .lca-verdict,
+.theme-neubrutal .lca-note-lbl {
+  font-family: -apple-system, sans-serif !important;
+  font-weight: 700 !important;
+  color: #000000 !important;
+}
+
+.theme-neubrutal .lca-verdict {
+  border: 3px solid #000000 !important;
+  box-shadow: 3px 3px 0 #000000 !important;
+  background: #FFFFFF !important;
+  border-radius: 0px !important;
+}
+
+.theme-neubrutal .lca-tag {
+  border: 2px solid #000000 !important;
+  box-shadow: 2px 2px 0 #000000 !important;
+  border-radius: 0px !important;
+  background: #FFFFFF !important;
+  color: #000000 !important;
+  font-weight: 700 !important;
+}
+
+.theme-neubrutal .lca-note {
+  border: 3px solid #000000 !important;
+  box-shadow: 4px 4px 0 #000000 !important;
+  border-radius: 0px !important;
+  background: #FFFFFF !important;
+}
+
+.theme-neubrutal .lca-graph-tab {
+  border: 3px solid #000000 !important;
+  border-radius: 0px !important;
+  background: #FFFFFF;
+  color: #000000;
+  font-weight: 700;
+  font-family: -apple-system, sans-serif !important;
+}
+.theme-neubrutal .lca-graph-tab.active {
+  background: #FF5252 !important;
+  color: #FFFFFF !important;
+  box-shadow: 4px 4px 0 #000000 !important;
+  transform: translate(-2px, -2px);
+}
+
+.theme-neubrutal .lca-btn,
+.theme-neubrutal button {
+  border: 3px solid #000000 !important;
+  border-radius: 8px !important; /* DESIGN6 says subtly rounded (0.5rem) shape for buttons */
+  box-shadow: 4px 4px 0 #000000 !important;
+  font-weight: 700 !important;
+}
+
+.theme-neubrutal .lca-btn:active,
+.theme-neubrutal button:active {
+  box-shadow: 0px 0px 0 #000000 !important;
+  transform: translate(4px, 4px) !important;
+}
+
+/* Tetris Loader Neubrutalism Overrides */
+.theme-neubrutal .lca-tetris {
+  border: 3px solid #000000 !important;
+  box-shadow: 6px 6px 0 #000000 !important;
+  border-radius: 0px !important;
+  background: #FFFFFF !important;
+  padding: 8px !important;
+}
+.theme-neubrutal .lca-tetris-cell {
+  border: 1px solid #000000 !important;
+  border-radius: 0px !important;
+}
+.theme-neubrutal .lca-tetris-cell.filled {
+  background: #2196F3 !important;
+  border: 2px solid #000000 !important;
+  box-shadow: none !important;
+}
+
+/* Popup Specific Neubrutalism Overrides */
+.mock-popup.theme-neubrutal {
+  background: #FFEB3B !important;
+  border: 3px solid #000000 !important;
+  box-shadow: 6px 6px 0 #000000 !important;
+  border-radius: 0px !important;
+}
+
+.theme-neubrutal .p-header-dash {
+  background: #FFFFFF !important;
+  border-bottom: 3px solid #000000 !important;
+  border-radius: 0px !important;
+  box-shadow: none !important;
+}
+
+.theme-neubrutal .settings-card,
+.theme-neubrutal .p-activity-card {
+  background: #FFFFFF !important;
+  border: 3px solid #000000 !important;
+  box-shadow: 4px 4px 0 #000000 !important;
+  border-radius: 0px !important;
+  margin-bottom: 16px !important;
+}
+
+.theme-neubrutal .s-key-input {
+  border: 3px solid #000000 !important;
+  border-radius: 0px !important;
+  box-shadow: inset 2px 2px 0 rgba(0,0,0,0.1) !important;
+  font-weight: 700;
+}
+
+.theme-neubrutal .tab-bar {
+  background: #FFFFFF !important;
+  border-top: 3px solid #000000 !important;
+  border-radius: 0px !important;
+  padding-bottom: 8px; /* Safe area padding */
+}
+
+.theme-neubrutal .tab-item {
+  border: none !important;
+  box-shadow: none !important;
+}
+.theme-neubrutal .tab-item.active {
+  background: #FFEB3B !important;
+  border: 3px solid #000000 !important;
+  box-shadow: 2px 2px 0 #000000 !important;
+  border-radius: 0px !important;
+}
+
+/* Switches */
+.theme-neubrutal .p-switch {
+  border: 3px solid #000000 !important;
+  border-radius: 0px !important;
+  box-shadow: 2px 2px 0 #000000 !important;
+  background: #FFFFFF !important;
+}
+.theme-neubrutal .p-switch-track {
+  border-radius: 0px !important;
+  box-shadow: inset 0 0 0 0px #000 !important;
+  background: #FFFFFF !important;
+}
+.theme-neubrutal .p-switch input:checked + .p-switch-track {
+  background: #FF5252 !important;
+}
+.theme-neubrutal .p-switch-track::before {
+  border: 3px solid #000000 !important;
+  border-radius: 0px !important;
+  background: #FFFFFF !important;
+  box-shadow: none !important;
+  top: 1px !important;
+  left: 1px !important;
+}
+.theme-neubrutal .p-switch input:checked + .p-switch-track::before {
+  transform: translateX(18px) !important;
+}
+
+/* Stats Streak Ring Alternative */
+.theme-neubrutal .p-streak-ring svg {
+  display: none !important; /* Hide gradient ring */
+}
+.theme-neubrutal .p-streak-ring {
+  background: #FFEB3B !important;
+  border: 4px solid #000000 !important;
+  box-shadow: 6px 6px 0 #000000 !important;
+  border-radius: 0px !important;
+}

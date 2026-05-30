@@ -82,12 +82,15 @@ Orthex runs **three sequential analysis passes** on your submission, then genera
 > **Supported verdicts:** 
 > <img src="https://www.google.com/s2/favicons?domain=leetcode.com&sz=16" width="16" height="16" align="middle" alt="LeetCode"/> Accepted &nbsp;·&nbsp; Wrong Answer &nbsp;·&nbsp; TLE &nbsp;·&nbsp; MLE &nbsp;·&nbsp; Runtime Error &nbsp;·&nbsp; Compile Error
 
-<br/>
-<div align="center">
-  <img src="assets/screenshot_analysis_light.png" alt="Orthex Analysis Panel in Light Mode" width="48%">
-  <img src="assets/screenshot_analysis_dark.png" alt="Orthex Analysis Panel in Dark Mode" width="48%">
-  <p><em>The main analysis panel matching your LeetCode theme.</em></p>
-</div>
+---
+
+## Themes & Customization
+
+Orthex ships with two distinct design languages out of the box.
+
+| Editorial Theme (Glassmorphism) | Neubrutalism Theme (Bold & Raw) |
+| :---: | :---: |
+| ![Editorial Theme](assets/theme_editorial.png) | ![Neubrutalism Theme](assets/theme_neubrutalist.png) |
 
 ---
 
@@ -133,12 +136,6 @@ Submit on LeetCode
 2. Paste your Groq API key → click **Save**.
 3. The status indicator turns `🟢 green` when stored. The key lives in `chrome.storage.sync` and never leaves your browser.
 
-<br/>
-<div align="center">
-  <img src="assets/screenshot_popup.png" alt="Orthex Settings Popup" width="300">
-  <p><em>Securely store your API key in Chrome's synced storage.</em></p>
-</div>
-
 ---
 
 ## Usage
@@ -150,12 +147,6 @@ Navigate to any [LeetCode problem](https://leetcode.com/problems/), write a solu
 | <img src="https://www.google.com/s2/favicons?domain=developer.chrome.com&sz=16" width="16" height="16" align="middle" alt="Extension"/> **Auto** *(default)* | Submit a solution | Panel appears automatically for Accepted, WA, and TLE. Configurable in settings. |
 | <img src="https://www.google.com/s2/favicons?domain=developer.chrome.com&sz=16" width="16" height="16" align="middle" alt="Extension"/> **Manual** | Click **Analysis** button | Trigger on demand. Click again to dismiss. |
 | <img src="https://www.google.com/s2/favicons?domain=leetcode.com&sz=16" width="16" height="16" align="middle" alt="LeetCode"/> **Solutions** | Click **Solutions** button | Streams 2–3 approaches with Mermaid flowcharts. |
-
-<br/>
-<div align="center">
-  <img src="assets/screenshot_solutions.png" alt="Orthex Reference Solutions Panel" width="80%">
-  <p><em>Explore multiple reference solutions ranging from Intern to Staff Architect approaches.</em></p>
-</div>
 
 ---
 
