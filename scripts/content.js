@@ -21,6 +21,7 @@ const ICON_PASTE = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" 
 const ICON_CHECK = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
 const ICON_SPARKLES = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1-1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>`;
 const ICON_REGEN = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>`;
+const ICON_LIGHTBULB = `<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--lca-primary)"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.9 1.2 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>`;
 
 
 // ─── Theme Engine ──────────────────────────────────────────
@@ -1229,7 +1230,7 @@ function errHtml(msg, type, id, data, renderFn) {
       <strong>Error:</strong> ${esc(displayMsg)}
       ${extraHtml}
       <div>
-        <button class="lca-retry-btn">↻ Retry</button>
+        <button class="lca-retry-btn" style="display:flex; align-items:center; gap:4px; margin:0 auto;">${ICON_REGEN} Retry</button>
       </div>
     </div>
   </div>`;
@@ -1591,7 +1592,7 @@ async function openSolutionsPanel() {
       // Empty state — show a "Generate" button
       bodyEl.innerHTML = `
         <div style="text-align:center; padding:40px 20px 32px;">
-          <div style="font-size:36px; margin-bottom:12px;">💡</div>
+          <div style="margin-bottom:12px;">${ICON_LIGHTBULB}</div>
           <div style="font-family:'Bricolage Grotesque',sans-serif; font-size:17px; font-weight:700; color:var(--lca-text-head); margin-bottom:6px;">${type} Solution</div>
           <div style="font-size:13px; color:var(--lca-muted); margin-bottom:24px; max-width:320px; margin-left:auto; margin-right:auto; line-height:1.5;">
             Click the button below to generate the ${type.toLowerCase()} approach with a full step-by-step breakdown.
@@ -1620,7 +1621,7 @@ async function openSolutionsPanel() {
 
       <div class="lca-note lca-code-block" style="border:1px solid var(--lca-primary-border); border-radius:6px; padding:12px 14px; position:relative; overflow:hidden; margin-bottom:16px;">
         <div style="position:absolute; right:8px; top:8px; display:flex; gap:6px;">
-          <button id="lca-sol-paste-btn" class="lca-retry-btn" style="font-size:10px; padding:4px 8px; height:26px; display:flex; align-items:center; gap:4px;">${ICON_PASTE || '📋'} Paste to Editor</button>
+          <button id="lca-sol-paste-btn" class="lca-retry-btn" style="font-size:10px; padding:4px 8px; height:26px; display:flex; align-items:center; gap:4px;">${ICON_PASTE} Paste to Editor</button>
           <button id="lca-sol-copy-btn" class="lca-retry-btn" style="font-size:10px; padding:4px 8px; height:26px; display:flex; align-items:center; gap:4px;">${ICON_COPY} Copy</button>
         </div>
         <pre style="margin:0; font-family:'JetBrains Mono',monospace; font-size:12.5px; overflow-x:auto; color:var(--lca-ink); padding-top:4px; line-height:1.5;">${highlightSyntax(sol.code)}</pre>
