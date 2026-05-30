@@ -857,7 +857,8 @@
 }
 
 /* Primary Button */
-.lca-btn.lca-neubrutalist {
+.lca-btn.lca-neubrutalist,
+.lca-container.lca-neubrutalist .lca-btn {
   background: #FFEB3B !important; /* Yellow */
   color: #000000 !important;
   border: 3px solid #000000 !important;
@@ -866,12 +867,14 @@
   font-weight: 800 !important;
   transition: transform 0.1s, box-shadow 0.1s !important;
 }
-.lca-btn.lca-neubrutalist:hover {
+.lca-btn.lca-neubrutalist:hover,
+.lca-container.lca-neubrutalist .lca-btn:hover {
   background: #fcd703 !important;
   transform: translate(-1px, -1px) !important;
   box-shadow: 4px 4px 0px #000000 !important;
 }
-.lca-btn.lca-neubrutalist:active {
+.lca-btn.lca-neubrutalist:active,
+.lca-container.lca-neubrutalist .lca-btn:active {
   transform: translate(2px, 2px) !important;
   box-shadow: 1px 1px 0px #000000 !important;
 }
@@ -1128,20 +1131,23 @@
   color: #e0e0e0 !important;
 }
 .lca-dark .lca-btn.lca-neubrutalist,
-.lca-btn.lca-neubrutalist.lca-dark {
+.lca-btn.lca-neubrutalist.lca-dark,
+.lca-container.lca-neubrutalist.lca-dark .lca-btn {
   border-color: #1591dc !important;
   box-shadow: 3px 3px 0px #1591dc !important;
   background: #1e1e1e !important;
   color: #ffffff !important;
 }
 .lca-dark .lca-btn.lca-neubrutalist:hover,
-.lca-btn.lca-neubrutalist.lca-dark:hover {
+.lca-btn.lca-neubrutalist.lca-dark:hover,
+.lca-container.lca-neubrutalist.lca-dark .lca-btn:hover {
   background: #1591dc !important;
   color: #ffffff !important;
   box-shadow: 4px 4px 0px #1591dc !important;
 }
 .lca-dark .lca-btn.lca-neubrutalist:active,
-.lca-btn.lca-neubrutalist.lca-dark:active {
+.lca-btn.lca-neubrutalist.lca-dark:active,
+.lca-container.lca-neubrutalist.lca-dark .lca-btn:active {
   transform: translate(2px, 2px) !important;
   box-shadow: 1px 1px 0px #1591dc !important;
 }
