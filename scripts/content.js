@@ -1426,14 +1426,16 @@ async function openSolutionsPanel() {
   container.style.marginTop = '12px';
 
   // Gradient background
-  const gradBg = document.createElement('div');
-  gradBg.className = 'lca-gradient-bg';
-  gradBg.innerHTML = `
-    <div class="lca-grad-blob lca-grad-1"></div>
-    <div class="lca-grad-blob lca-grad-2"></div>
-    <div class="lca-grad-blob lca-grad-3"></div>
-  `;
-  container.appendChild(gradBg);
+  if (s.uiStyle !== 'neubrutalist') {
+    const gradBg = document.createElement('div');
+    gradBg.className = 'lca-gradient-bg';
+    gradBg.innerHTML = `
+      <div class="lca-grad-blob lca-grad-1"></div>
+      <div class="lca-grad-blob lca-grad-2"></div>
+      <div class="lca-grad-blob lca-grad-3"></div>
+    `;
+    container.appendChild(gradBg);
+  }
 
   const btnContainer = document.getElementById('lca-solutions-btn-container');
   if (btnContainer) btnContainer.insertAdjacentElement('afterend', container);
@@ -1593,7 +1595,7 @@ async function openSolutionsPanel() {
       bodyEl.innerHTML = `
         <div style="text-align:center; padding:40px 20px 32px;">
           <div style="margin-bottom:12px; display:flex; justify-content:center; align-items:center;">${ICON_LIGHTBULB}</div>
-          <div style="font-family:'Bricolage Grotesque',sans-serif; font-size:17px; font-weight:700; color:var(--lca-text-head); margin-bottom:6px;">${type} Solution</div>
+          <div class="lca-sol-empty-title">${type} Solution</div>
           <div style="font-size:13px; color:var(--lca-muted); margin-bottom:24px; max-width:320px; margin-left:auto; margin-right:auto; line-height:1.5;">
             Click the button below to generate the ${type.toLowerCase()} approach with a full step-by-step breakdown.
           </div>
@@ -1611,7 +1613,7 @@ async function openSolutionsPanel() {
     const timeBadgeClass = sol.type === 'Staff Architect Approach' ? 'c-g' : sol.type === 'L5 Engineer Approach' ? 'c-e' : 'c-f';
     bodyEl.innerHTML = `
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
-        <h4 style="font-family:'Bricolage Grotesque','Cormorant Garamond',Georgia,serif; font-size:18px; font-weight:700; color:var(--lca-text-head); margin:0;">${esc(sol.name || type)}</h4>
+        <h4 class="lca-sol-h4">${esc(sol.name || type)}</h4>
         <div style="display:flex; gap:6px; flex-wrap:wrap;">
           <span class="${timeBadgeClass}" style="font-size:11px; padding:2px 8px; font-family:'Inter',sans-serif; font-weight:600; border-radius:4px;">Time: ${esc(sol.timeComplexity || '?')}</span>
           <span class="c-p" style="font-size:11px; padding:2px 8px; font-family:'Inter',sans-serif; font-weight:600; border-radius:4px;">Space: ${esc(sol.spaceComplexity || '?')}</span>

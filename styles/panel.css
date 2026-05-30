@@ -1959,3 +1959,70 @@
 .lca-dark .lca-modal-overlay {
   background: rgba(0, 0, 0, 0.7) !important;
 }
+
+/* ── Reference Solutions Typography ── */
+.lca-sol-empty-title {
+  font-family: 'Bricolage Grotesque', sans-serif !important;
+  font-size: 17px !important;
+  font-weight: 700 !important;
+  color: var(--lca-text-head) !important;
+  margin-bottom: 6px !important;
+}
+.lca-sol-h4 {
+  font-family: 'Bricolage Grotesque', 'Cormorant Garamond', Georgia, serif !important;
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  color: var(--lca-text-head) !important;
+  margin: 0 !important;
+}
+
+/* Neubrutalist Overrides */
+.lca-container.lca-neubrutalist .lca-sol-empty-title,
+.lca-container.lca-neubrutalist .lca-sol-h4 {
+  font-family: 'Bricolage Grotesque', system-ui, sans-serif !important;
+  font-weight: 800 !important;
+  color: #000000 !important;
+  letter-spacing: -0.5px !important;
+}
+.lca-container.lca-neubrutalist.lca-dark .lca-sol-empty-title,
+.lca-container.lca-neubrutalist.lca-dark .lca-sol-h4,
+.lca-dark .lca-container.lca-neubrutalist .lca-sol-empty-title,
+.lca-dark .lca-container.lca-neubrutalist .lca-sol-h4 {
+  color: #ffffff !important;
+}
+
+/* Neubrutalist Tab Animations */
+.lca-container.lca-neubrutalist .lca-graph-tabs button.lca-graph-tab:hover {
+  transform: translate(-1px, -1px) !important;
+  box-shadow: 3px 3px 0px #000000 !important;
+}
+.lca-container.lca-neubrutalist.lca-dark .lca-graph-tabs button.lca-graph-tab:hover,
+.lca-dark .lca-container.lca-neubrutalist .lca-graph-tabs button.lca-graph-tab:hover {
+  box-shadow: 3px 3px 0px #333333 !important;
+}
+.lca-container.lca-neubrutalist .lca-graph-tabs button.lca-graph-tab:active {
+  transform: translate(1px, 1px) !important;
+  box-shadow: 1px 1px 0px #000000 !important;
+}
+.lca-container.lca-neubrutalist.lca-dark .lca-graph-tabs button.lca-graph-tab:active,
+.lca-dark .lca-container.lca-neubrutalist .lca-graph-tabs button.lca-graph-tab:active {
+  box-shadow: 1px 1px 0px #333333 !important;
+}
+.lca-container.lca-neubrutalist .c-g,
+.lca-container.lca-neubrutalist .c-e,
+.lca-container.lca-neubrutalist .c-p,
+.lca-container.lca-neubrutalist .c-f {
+  font-family: 'Bricolage Grotesque', system-ui, sans-serif !important;
+  font-weight: 800 !important;
+  box-shadow: 2px 2px 0px #000000 !important;
+}
+.lca-container.lca-neubrutalist.lca-dark .c-g,
+.lca-container.lca-neubrutalist.lca-dark .c-e,
+.lca-container.lca-neubrutalist.lca-dark .c-p,
+.lca-container.lca-neubrutalist.lca-dark .c-f,
+.lca-dark .lca-container.lca-neubrutalist .c-g,
+.lca-dark .lca-container.lca-neubrutalist .c-e,
+.lca-dark .lca-container.lca-neubrutalist .c-p,
+.lca-dark .lca-container.lca-neubrutalist .c-f {
+  box-shadow: 2px 2px 0px #333333 !important;
+}
