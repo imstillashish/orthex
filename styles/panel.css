@@ -1223,6 +1223,14 @@
 .lca-dark .lca-container.lca-neubrutalist .lca-axis-label {
   fill: #888888 !important;
 }
+.lca-container.lca-neubrutalist.lca-dark .lca-graph-label,
+.lca-dark .lca-container.lca-neubrutalist .lca-graph-label {
+  fill: #e0e0e0 !important;
+}
+.lca-container.lca-neubrutalist.lca-dark .lca-legend-item,
+.lca-dark .lca-container.lca-neubrutalist .lca-legend-item {
+  color: #e0e0e0 !important;
+}
 .lca-container.lca-neubrutalist.lca-dark .lca-curve-bg,
 .lca-dark .lca-container.lca-neubrutalist .lca-curve-bg {
   stroke: #444444 !important;
