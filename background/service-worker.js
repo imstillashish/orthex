@@ -681,7 +681,7 @@ Write ONLY the markdown text (NOT JSON). Follow this exact structure:
 
 Additional rules:
 - Use simple everyday language. No jargon without explanation.
-- Enclose all math expressions in $dollar signs$ (e.g., $O(n)$, $n = 5$).
+- Enclose all math expressions in markdown backticks (e.g., \`O(n)\`, \`n = 5\`).
 - Do NOT include any JSON. Output ONLY markdown text.`;
 
     console.log(`[LCA] Solutions Pass 2: stepByStep for ${sol.type}...`);
@@ -780,7 +780,7 @@ Write ONLY the markdown text (NOT JSON). Follow this exact structure:
 
 Additional rules:
 - Use simple everyday language. No jargon without explanation.
-- Enclose all math expressions in $dollar signs$ (e.g., $O(n)$, $n = 5$).
+- Enclose all math expressions in markdown backticks (e.g., \`O(n)\`, \`n = 5\`).
 - Do NOT include any JSON. Output ONLY markdown text.`;
 
   console.log(`[LCA] Single Solution Pass 2: stepByStep for ${sol.type}...`);

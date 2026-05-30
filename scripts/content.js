@@ -1581,7 +1581,9 @@ async function openSolutionsPanel() {
   function renderMarkdown(md) {
     if (!md) return '';
     if (window.marked) {
-      return window.marked.parse(md);
+      // Fallback for previously cached AI generations that used $math$
+      const processed = md.replace(/\$([^$\n]+)\$/g, '`$1`');
+      return window.marked.parse(processed);
     }
     return md;
   }
