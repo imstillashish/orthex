@@ -1,0 +1,41 @@
+<USER_REQUEST>
+Orthex Codebase Bug Roast — 50+ Bugs & Logic Problems
+Critical / High Severity
+1. LC_SELECTORS Overwrite — Broken Description Extraction
+content.js:8 re-declares var LC_SELECTORS with different properties than extractor.js:10. Since extractor.js loads first (manifest.json:27) then content.js overwrites it, extractor.js's LC_SELECTORS.descriptionContent, descriptionFallback1, descriptionFallback2, descriptionFallback3 are all undefined. Functions extractProblemDescription() and findDescriptionPanel() silently return empty strings. The solutions generation feature sends "Description not extracted." to the AI for every problem.
+2. extractBeatPercentage Ignores Type Parameter
+extractor.js:278 — The type parameter ('runtime' or 'memory') is accepted but never used. The function returns the first "beats X%" text node found anywhere in the DOM. Runtime and memory beat percentages are indistinguishable — you'll often get the wrong one.
+3. Streaming Timeout Clears Too Early
+service-worker.js:427 — clearTimeout(timeoutId) is called right after the HTTP response headers arrive, not after the stream finishes. The 3-minute timeout only covers the TCP handshake, not the actual streaming data. A slow stream could hang indefinitely.
+4. model Parameter Ignored in Streaming Call
+service-worker.js:398,407 — callGroqStreaming accepts a model parameter but line 407 hardcodes model: GROQ_MODEL. The parameter is silently discarded.
+5. Tetris Loader Can't Actually Stop
+content.js:1143 — this.reqId = requestAnimationFrame(this.loop) is called unconditionally at the end of loop(). Even after stop() cancels the frame and nulls reqId, the currently-executing loop invocation still re-schedules itself. The loader runs forever after first start.
+6. Comment Removal Regex Corrupts JSON String Values
+service-worker.js:520 — The regex ([^\\:]|^)\/\/.*$ strips // inside JSON string values (e.g., "url": "https://example.com" becomes "url": "https:). AI responses containing URLs in code fields will have their JSON corru
+<truncated 9488 bytes>
+op returns the first element matching "Easy", "Medium", or "Hard" regardless of context. A "Hard" tag in the problem title would cause incorrect difficulty detection.
+52. CSS d Property Transition Browser Support
+panel.css:1260 — transition: d 0.45s only works in Chromium 89+. Firefox/Safari don't support CSS d transitions, so the graph path animations won't work cross-browser.
+53. content.js:622 Extension Context Not Rechecked
+chrome.runtime.sendMessage at line 622 could fail if the extension was reloaded between the chrome.runtime?.id check at line 239 and the actual send. The .catch() is missing.
+54. content.js:1484-1486 Wrong Tab Selector for Re-enabling
+After ANALYZE_PASS1_DONE, the code queries .lca-graph-tab which matches BOTH the efficiency graph tabs AND the solution type tabs. All tabs get re-enabled, potentially interfering with the efficiency graph state.
+55. service-worker.js:520 Comment Regex Has Edge Case
+The regex ([^\\:]|^)\/\/.*$ uses [^\\:] which matches any char except \ and :. But a line like https:// would have the s: before // matched by [^\\:], so the URL would be stripped. The : exception doesn't help because : is after //, not before.
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-05-30T12:29:26+05:30.
+
+The user's current state is as follows:
+Active Document: /home/asp/Downloads/JAVA_Delete_15052026/manifest.json (LANGUAGE_JSON)
+Cursor is on line: 11
+Other open documents:
+- /home/asp/Downloads/JAVA_Delete_15052026/manifest.json (LANGUAGE_JSON)
+- /home/asp/Downloads/JAVA_Delete_15052026/README.md (LANGUAGE_MARKDOWN)
+Running terminal commands:
+- exec opencode --port 1688 (in /home/asp/Downloads/JAVA_Delete_15052026, running for 52m11s)
+</ADDITIONAL_METADATA>
+<USER_SETTINGS_CHANGE>
+The user changed setting `Model Selection` from Claude Sonnet 4.6 (Thinking) to Gemini 3.1 Pro (High). No need to comment on this change if the user doesn't ask about it. If reporting what model you are, please use a human readable name instead of the exact string.
+</USER_SETTINGS_CHANGE>

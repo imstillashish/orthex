@@ -68,16 +68,22 @@ function initFluidBackground() {
     let curX = 0, curY = 0;
     let tgX = 0, tgY = 0;
 
+    let animationId;
     function move() {
+      if (Math.abs(tgX - curX) < 0.5 && Math.abs(tgY - curY) < 0.5) {
+        animationId = null;
+        return;
+      }
       curX += (tgX - curX) / 30; // Slower, more ethereal than before
       curY += (tgY - curY) / 30;
       interactive.style.transform = `translate(${Math.round(curX)}px, ${Math.round(curY)}px)`;
-      requestAnimationFrame(move);
+      animationId = requestAnimationFrame(move);
     }
 
     window.addEventListener('mousemove', (e) => {
       tgX = e.clientX - window.innerWidth / 2;
       tgY = e.clientY - window.innerHeight / 2;
+      if (!animationId) move();
     });
 
     move();
@@ -98,9 +104,12 @@ function updateHomeStatus(hasKey) {
 // ── Page: Settings ───────────────────────────────────────────
 function loadSettings() {
   chrome.storage.sync.get(['autoAnalyze', 'analyzeOnWrongAnswer', 'analyzeOnTLE', 'uiStyle'], (result) => {
-    document.getElementById('toggle-auto').checked = result.autoAnalyze !== false;
-    document.getElementById('toggle-wa').checked   = result.analyzeOnWrongAnswer !== false;
-    document.getElementById('toggle-tle').checked  = result.analyzeOnTLE !== false;
+    const ta = document.getElementById('toggle-auto');
+    if (ta) ta.checked = result.autoAnalyze !== false;
+    const tw = document.getElementById('toggle-wa');
+    if (tw) tw.checked = result.analyzeOnWrongAnswer !== false;
+    const tt = document.getElementById('toggle-tle');
+    if (tt) tt.checked = result.analyzeOnTLE !== false;
     
     const currentStyle = result.uiStyle || 'classic';
     updatePopupStyleActiveSegment(currentStyle);
@@ -109,7 +118,8 @@ function loadSettings() {
 
   // Save immediately on any toggle change
   ['toggle-auto', 'toggle-wa', 'toggle-tle'].forEach(id => {
-    document.getElementById(id).addEventListener('change', saveSettings);
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('change', saveSettings);
   });
 
   // Setup segmented button click listeners
@@ -131,6 +141,7 @@ function loadSettings() {
       });
     });
   });
+
 }
 
 function updatePopupStyleActiveSegment(style) {
@@ -154,9 +165,9 @@ function applyPopupVisualTheme(style) {
 
 function saveSettings() {
   chrome.storage.sync.set({
-    autoAnalyze:          document.getElementById('toggle-auto').checked,
-    analyzeOnWrongAnswer: document.getElementById('toggle-wa').checked,
-    analyzeOnTLE:         document.getElementById('toggle-tle').checked,
+    autoAnalyze:          document.getElementById('toggle-auto')?.checked ?? true,
+    analyzeOnWrongAnswer: document.getElementById('toggle-wa')?.checked ?? true,
+    analyzeOnTLE:         document.getElementById('toggle-tle')?.checked ?? true,
   });
 }
 
@@ -173,7 +184,10 @@ function loadGroqKey() {
   if (clearBtn) clearBtn.addEventListener('click', clearGroqKey);
   if (keyInput) {
     keyInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveGroqKey(); });
-    keyInput.addEventListener('blur', saveGroqKey);
+    keyInput.addEventListener('blur', () => {
+      if (keyInput.value.trim() !== (keyInput.dataset.originalValue || '')) saveGroqKey();
+    });
+    keyInput.dataset.originalValue = keyInput.value;
   }
   if (eyeBtn) {
     eyeBtn.addEventListener('click', () => {
@@ -199,14 +213,14 @@ function updateKeyDisplay(key) {
       preview.className = 's-status-badge connected';
     }
     if(clearBtn) clearBtn.style.display = 'flex';
-    if(keyInput) keyInput.value = key;
+    if(keyInput) { keyInput.value = key; keyInput.dataset.originalValue = key; }
   } else {
     if(preview) {
       preview.textContent = 'Not configured';
       preview.className = 's-status-badge missing';
     }
     if(clearBtn) clearBtn.style.display = 'none';
-    if(keyInput) keyInput.value = '';
+    if(keyInput) { keyInput.value = ''; keyInput.dataset.originalValue = ''; }
   }
 }
 
@@ -292,7 +306,9 @@ function animateCounter(elementId, targetValue, duration = 800) {
 }
 
 function loadStats() {
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const d = new Date();
+  const tzOffset = d.getTimezoneOffset() * 60000;
+  const todayStr = new Date(d.getTime() - tzOffset).toISOString().slice(0, 10);
 
   chrome.storage.local.get(['analysisCount', 'analysisDates'], (result) => {
     const total = result.analysisCount || 0;
@@ -316,7 +332,8 @@ function loadStats() {
     }
     
     while(true) {
-      const dStr = checkDate.toISOString().slice(0, 10);
+      // FIX: Use tzOffset to ensure dStr matches the local timezone logic used to save it
+      const dStr = new Date(checkDate.getTime() - tzOffset).toISOString().slice(0, 10);
       if (dates[dStr] && dates[dStr] > 0) {
         streak++;
         checkDate.setDate(checkDate.getDate() - 1);

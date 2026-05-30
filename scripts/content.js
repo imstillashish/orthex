@@ -1009,6 +1009,7 @@ class TetrisLoader {
     this.isClearing = false;
     this.reqId = null;
     this.lastUpdate = 0;
+    this.stopped = false;
     
     this.initDOM();
     this.loop = this.loop.bind(this);
@@ -1121,6 +1122,7 @@ class TetrisLoader {
   }
 
   loop(timestamp) {
+    if (this.stopped) return;
     if (!this.lastUpdate) this.lastUpdate = timestamp;
     if (timestamp - this.lastUpdate >= this.speed) {
       this.lastUpdate = timestamp;
@@ -1169,6 +1171,7 @@ class TetrisLoader {
   }
 
   stop() {
+    this.stopped = true;
     if (this.reqId) {
       cancelAnimationFrame(this.reqId);
       this.reqId = null;
@@ -1482,7 +1485,7 @@ async function openSolutionsPanel() {
       if (activeType === msg.solutionType) renderTabBody(msg.solutionType);
       
       // Re-enable tabs
-      const tabs = document.querySelectorAll('.lca-graph-tab');
+      const tabs = document.querySelectorAll('#lca-solutions-container .lca-graph-tab');
       tabs.forEach(t => { t.disabled = false; t.style.opacity = ''; });
 
       // Mark the step-by-step div as streaming so the blink cursor shows
@@ -1680,31 +1683,37 @@ async function openSolutionsPanel() {
     // Disable the active tab button during generation
     tabs.forEach(t => { t.disabled = true; t.style.opacity = '0.6'; });
 
-    chrome.runtime.sendMessage({
-      type: 'GENERATE_SINGLE_SOLUTION',
-      payload: { problemTitle, difficulty, language, description, defaultCode, solutionType: type }
-    }, (res) => {
-      if (loader) loader.stop();
-      if (!chrome.runtime?.id) return;
-      
-      if (!res || !res.success) {
-        tabs.forEach(t => { t.disabled = false; t.style.opacity = ''; });
-        // Error state
-        bodyEl.innerHTML = `
-          <div style="padding:24px 20px;">
-            <div class="lca-wh" style="margin-bottom:12px;">
-              <span class="lca-wh-icon" style="color:var(--lca-error); display:flex; align-items:center;">${ICON_ERR}</span>
-              <span class="lca-wh-title">Generation Failed</span>
+    try {
+      chrome.runtime.sendMessage({
+        type: 'GENERATE_SINGLE_SOLUTION',
+        payload: { problemTitle, difficulty, language, description, defaultCode, solutionType: type }
+      }, (res) => {
+        if (loader) loader.stop();
+        if (chrome.runtime.lastError || !chrome.runtime?.id) return;
+        
+        if (!res || !res.success) {
+          tabs.forEach(t => { t.disabled = false; t.style.opacity = ''; });
+          // Error state
+          bodyEl.innerHTML = `
+            <div style="padding:24px 20px;">
+              <div class="lca-wh" style="margin-bottom:12px;">
+                <span class="lca-wh-icon" style="color:var(--lca-error); display:flex; align-items:center;">${ICON_ERR}</span>
+                <span class="lca-wh-title">Generation Failed</span>
+              </div>
+              <div style="font-size:13px; color:var(--lca-error); margin-bottom:16px;">${res?.error || 'Unknown error. Check your API key and internet connection.'}</div>
+              <button id="lca-gen-retry-btn" class="lca-btn ${getThemeClass()}" style="display:inline-flex; align-items:center; gap:6px; font-size:13px; padding:8px 18px;">
+                ${ICON_REGEN} Retry
+              </button>
             </div>
-            <div style="font-size:13px; color:var(--lca-error); margin-bottom:16px;">${res?.error || 'Unknown error. Check your API key and internet connection.'}</div>
-            <button id="lca-gen-retry-btn" class="lca-btn ${getThemeClass()}" style="display:inline-flex; align-items:center; gap:6px; font-size:13px; padding:8px 18px;">
-              ${ICON_REGEN} Retry
-            </button>
-          </div>
-        `;
-        bodyEl.querySelector('#lca-gen-retry-btn')?.addEventListener('click', () => generateSingle(type));
-      }
-    });
+          `;
+          bodyEl.querySelector('#lca-gen-retry-btn')?.addEventListener('click', () => generateSingle(type));
+        }
+      });
+    } catch (e) {
+      if (loader) loader.stop();
+      tabs.forEach(t => { t.disabled = false; t.style.opacity = ''; });
+      alert('Extension context invalidated. Please refresh the page.');
+    }
   }
 
   // ── Wire up tab switching ─────────────────────────────────────────────

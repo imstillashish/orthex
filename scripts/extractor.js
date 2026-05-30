@@ -7,7 +7,7 @@
  * Main extraction function — returns a structured data object
  * from the current LeetCode submission result page.
  */
-var LC_SELECTORS = {
+const EXTRACTOR_LC_SELECTORS = {
   submissionResult: '[data-e2e-locator="submission-result"]',
   codeLangBtn: '[data-e2e-locator="code-lang-button"]',
   descriptionContent: 'div[data-track-load="description_content"]',
@@ -25,6 +25,7 @@ var LC_SELECTORS = {
     'button[class*="rounded"][class*="text-"]'
   ]
 };
+
 function extractSubmissionData() {
   return {
     problemTitle:    extractProblemTitle(),
@@ -33,9 +34,9 @@ function extractSubmissionData() {
     language:        extractLanguage(),
     verdict:         extractVerdict(),
     runtime:         extractRuntime(),
-    runtimeBeat:     extractRuntimeBeat(),
+    runtimeBeat:     extractBeatPercentage('runtime'),
     memory:          extractMemory(),
-    memoryBeat:      extractMemoryBeat(),
+    memoryBeat:      extractBeatPercentage('memory'),
     code:            extractCode(),
     difficulty:      extractDifficulty(),
     timestamp:       Date.now(),
@@ -47,39 +48,9 @@ function extractSubmissionId() {
   return match ? match[1] : null;
 }
 
-/**
- * Detects if a submission result panel is currently visible.
- * Works for both Accepted and error states.
- */
-function isSubmissionResultVisible() {
-  // Check for the result header text
-  const verdictTexts = ['Accepted', 'Wrong Answer', 'Time Limit Exceeded',
-    'Memory Limit Exceeded', 'Runtime Error', 'Compile Error',
-    'Output Limit Exceeded', 'TLE', 'MLE'];
-
-  for (const text of verdictTexts) {
-    if (findElementByText(text)) {
-      console.log(`[LCA] Found verdict text: "${text}"`);
-      return true;
-    }
-  }
-
-  // Also check for the runtime/memory stats section
-  const e2e = document.querySelector(LC_SELECTORS.submissionResult);
-  if (e2e) {
-    console.log('[LCA] Found e2e locator: submission-result');
-    return true;
-  }
-
-  // Fallback: look for "ms" runtime element
-  const rtElement = findRuntimeElement();
-  return !!rtElement;
-}
-
 // ── Individual Extractors ──────────────────────────────────
 
 function extractProblemTitle() {
-  // Method 1: Page title (format: "Problem Title - LeetCode")
   if (document.title && document.title !== 'LeetCode') {
     const titleParts = document.title.split(' - ');
     if (titleParts.length >= 2) {
@@ -87,11 +58,9 @@ function extractProblemTitle() {
     }
   }
 
-  // Method 2: First h1 or heading on problem page
   const h1 = document.querySelector('h1');
   if (h1 && h1.textContent.trim()) return h1.textContent.trim();
 
-  // Method 3: URL slug
   const match = window.location.pathname.match(/\/problems\/([^/]+)/);
   if (match) {
     return match[1].split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
@@ -101,33 +70,29 @@ function extractProblemTitle() {
 }
 
 function extractLanguage() {
-  // Method 1: e2e locator attribute
-  const langEl = document.querySelector(LC_SELECTORS.codeLangBtn);
+  const langEl = document.querySelector(EXTRACTOR_LC_SELECTORS.codeLangBtn);
   if (langEl) return langEl.textContent.trim();
 
-  // Method 2: Common language tab selectors
-  const selectors = LC_SELECTORS.langSelectItems;
-  for (const sel of selectors) {
+  for (const sel of EXTRACTOR_LC_SELECTORS.langSelectItems) {
     const el = document.querySelector(sel);
     if (el && isLanguageName(el.textContent.trim())) {
       return el.textContent.trim();
     }
   }
 
-  // Method 3: Look for language names in visible text
   const languages = ['Java', 'Python3', 'Python', 'C++', 'JavaScript',
     'TypeScript', 'Go', 'Rust', 'C#', 'Swift', 'Kotlin', 'Ruby', 'Scala',
     'PHP', 'C', 'Dart', 'Racket', 'Erlang', 'Elixir', 'MySQL', 'PostgreSQL'];
+  
   for (const lang of languages) {
-    if (findElementByText(lang)) return lang;
+    if (findElementByText(lang, true)) return lang;
   }
 
   return 'Unknown';
 }
 
 function extractVerdict() {
-  // Check for e2e locator first
-  const result = document.querySelector(LC_SELECTORS.submissionResult);
+  const result = document.querySelector(EXTRACTOR_LC_SELECTORS.submissionResult);
   if (result) return result.textContent.trim();
 
   const verdicts = [
@@ -136,36 +101,36 @@ function extractVerdict() {
     'Output Limit Exceeded',
   ];
   for (const v of verdicts) {
-    if (findElementByText(v)) return v;
+    if (findElementByText(v, true)) return v; // Exact match required
   }
   return 'Unknown';
 }
 
 function extractRuntime() {
-  // Look for elements containing ms (runtime)
   const el = findRuntimeElement();
   if (el) {
     const text = el.textContent.trim();
     const match = text.match(/(\d+)\s*ms/i);
-    if (match) return match[1] + 'ms';
+    if (match) return match[1] + ' ms';
     if (text.endsWith('ms')) return text;
   }
   return null;
 }
 
-function extractRuntimeBeat() {
-  return extractBeatPercentage('runtime') || extractBeatPercentage('time');
-}
-
 function extractMemory() {
-  const all = document.querySelectorAll('*');
-  for (const el of all) {
-    const text = el.childNodes[0]?.textContent?.trim();
-    if (text && /^\d+\.\d+\s*MB$/i.test(text)) return text;
-    if (text && /^\d+\s*MB$/i.test(text)) return text;
+  const selectors = [
+    '[class*="memory"]', '[class*="Memory"]',
+    '[data-e2e-locator*="memory"]',
+    '[class*="space"]'
+  ];
+  for (const sel of selectors) {
+    for (const el of document.querySelectorAll(sel)) {
+      const text = el.textContent.trim();
+      const match = text.match(/(\d+\.?\d*\s*MB)/i);
+      if (match) return match[1];
+    }
   }
 
-  // Broader search
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
   let node;
   while ((node = walker.nextNode())) {
@@ -175,12 +140,7 @@ function extractMemory() {
   return null;
 }
 
-function extractMemoryBeat() {
-  return extractBeatPercentage('memory');
-}
-
 function extractCode() {
-  // Method 1: Monaco editor API (most reliable when available)
   try {
     if (window.monaco) {
       const models = window.monaco.editor.getModels();
@@ -191,19 +151,17 @@ function extractCode() {
         }
       }
     }
-  } catch (e) { /* monaco not available */ }
+  } catch (e) { }
 
-  // Method 2: CodeMirror
   try {
-    const cm = document.querySelector(LC_SELECTORS.codeMirror);
+    const cm = document.querySelector(EXTRACTOR_LC_SELECTORS.codeMirror);
     if (cm && cm.CodeMirror) {
       const val = cm.CodeMirror.getValue();
       if (val && val.length > 10) return val;
     }
-  } catch (e) { /* not available */ }
+  } catch (e) { }
 
-  // Method 3: DOM view-lines (Monaco DOM fallback)
-  const viewLines = document.querySelector(LC_SELECTORS.viewLines);
+  const viewLines = document.querySelector(EXTRACTOR_LC_SELECTORS.viewLines);
   if (viewLines) {
     const lines = viewLines.querySelectorAll('.view-line');
     if (lines.length > 0) {
@@ -211,13 +169,11 @@ function extractCode() {
     }
   }
 
-  // Method 4: <textarea> or <pre> elements
-  const textarea = document.querySelector(LC_SELECTORS.textAreaCode);
+  const textarea = document.querySelector(EXTRACTOR_LC_SELECTORS.textAreaCode);
   if (textarea && textarea.value) return textarea.value;
   if (textarea && textarea.textContent) return textarea.textContent;
 
-  // Method 5: Submission detail page code block
-  const codeBlock = document.querySelector(LC_SELECTORS.codeAreaPre);
+  const codeBlock = document.querySelector(EXTRACTOR_LC_SELECTORS.codeAreaPre);
   if (codeBlock) return codeBlock.textContent;
 
   return null;
@@ -226,7 +182,7 @@ function extractCode() {
 function extractDifficulty() {
   const difficulties = ['Easy', 'Medium', 'Hard'];
   for (const diff of difficulties) {
-    const el = findElementByText(diff);
+    const el = findElementByText(diff, true);
     if (el && el.className && (
       el.className.includes('difficulty') ||
       el.className.includes('Difficulty') ||
@@ -235,29 +191,24 @@ function extractDifficulty() {
       el.className.includes('hard')
     )) return diff;
   }
-  // Fallback: any element with just these words
   for (const diff of difficulties) {
-    const el = findElementByText(diff);
-    if (el) return diff;
+    if (findElementByText(diff, true)) return diff;
   }
   return 'Unknown';
 }
 
 // ── Helper Functions ──────────────────────────────────────
 
-function findElementByText(text) {
+function findElementByText(text, exactOnly = false) {
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
   let node;
   const target = text.toLowerCase().trim();
   while ((node = walker.nextNode())) {
     const content = node.textContent.toLowerCase().trim();
     if (content === target) {
-      console.log(`[LCA] Exact match for "${text}" found in <${node.parentElement.tagName}>`);
       return node.parentElement;
     }
-    // Fallback for partial matches (e.g. "Accepted " or "Runtime: 0 ms")
-    if (content.includes(target) && content.length < target.length + 10) {
-      console.log(`[LCA] Partial match for "${text}" found in "${content}" (<${node.parentElement.tagName}>)`);
+    if (!exactOnly && content.includes(target) && content.length < target.length + 10) {
       return node.parentElement;
     }
   }
@@ -265,28 +216,43 @@ function findElementByText(text) {
 }
 
 function findRuntimeElement() {
-  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  const resultPanel = document.querySelector(EXTRACTOR_LC_SELECTORS.submissionResult)?.closest('div[class*="result"], div[class*="layout"]');
+  const root = resultPanel || document.body;
+
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
   let node;
   while ((node = walker.nextNode())) {
     const t = node.textContent.trim();
-    // Match "0 ms", "Runtime: 0 ms", "0ms", etc.
-    if (/(\d+)\s*ms/i.test(t)) return node.parentElement;
+    if (/^(\d+)\s*ms$/i.test(t)) return node.parentElement;
+    if (/Runtime:\s*(\d+)\s*ms/i.test(t)) return node.parentElement;
   }
   return null;
 }
 
 function extractBeatPercentage(type) {
-  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  const resultPanel = document.querySelector(EXTRACTOR_LC_SELECTORS.submissionResult)?.closest('div[class*="result"], div[class*="layout"]');
+  const root = resultPanel || document.body;
+
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
   let node;
   const beatRegex = /beats?\s+([\d.]+)%/i;
+  
   while ((node = walker.nextNode())) {
     const t = node.textContent.trim();
     const match = t.match(beatRegex);
     if (match) {
-      // Try to disambiguate runtime vs memory beats
+      // Find the closest stat container to avoid cross-contamination
       const parent = node.parentElement;
-      const parentText = parent?.closest('[class*="result"]')?.textContent || '';
-      return match[1] + '%';
+      const sectionText = parent?.closest('[class*="flex"], [class*="layout"]')?.textContent?.toLowerCase() || '';
+      
+      if (type === 'runtime' && (sectionText.includes('runtime') || sectionText.includes('time') || t.toLowerCase().includes('runtime'))) {
+        return match[1] + '%';
+      }
+      if (type === 'memory' && (sectionText.includes('memory') || t.toLowerCase().includes('memory'))) {
+        return match[1] + '%';
+      }
+      
+      // If we can't determine the type from the context, we just skip to avoid guessing wrong
     }
   }
   return null;
@@ -300,10 +266,10 @@ function isLanguageName(text) {
 
 function extractProblemDescription() {
   const selectors = [
-    LC_SELECTORS.descriptionContent,
-    LC_SELECTORS.descriptionFallback1,
-    LC_SELECTORS.descriptionFallback2,
-    LC_SELECTORS.descriptionFallback3
+    EXTRACTOR_LC_SELECTORS.descriptionContent,
+    EXTRACTOR_LC_SELECTORS.descriptionFallback1,
+    EXTRACTOR_LC_SELECTORS.descriptionFallback2,
+    EXTRACTOR_LC_SELECTORS.descriptionFallback3
   ];
   for (const s of selectors) {
     const el = document.querySelector(s);
@@ -316,10 +282,10 @@ function extractProblemDescription() {
 
 function findDescriptionPanel() {
   const selectors = [
-    LC_SELECTORS.descriptionContent,
-    LC_SELECTORS.descriptionFallback1,
-    LC_SELECTORS.descriptionFallback2,
-    LC_SELECTORS.descriptionFallback3
+    EXTRACTOR_LC_SELECTORS.descriptionContent,
+    EXTRACTOR_LC_SELECTORS.descriptionFallback1,
+    EXTRACTOR_LC_SELECTORS.descriptionFallback2,
+    EXTRACTOR_LC_SELECTORS.descriptionFallback3
   ];
   for (const s of selectors) {
     const el = document.querySelector(s);

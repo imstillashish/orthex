@@ -33,14 +33,14 @@
     "storage",
     "unlimitedStorage",
     "activeTab",
-    "scripting"
+    "scripting",
+    "tabs"
   ],
   "host_permissions": [
     "https://leetcode.com/*",
     "https://leetcode.cn/*",
-    "https://api.routeway.ai/*",
-    "https://openrouter.ai/*",
-    "https://api.groq.com/*"
+    "https://api.groq.com/*",
+    "https://console.groq.com/*"
   ],
   "web_accessible_resources": [
     {

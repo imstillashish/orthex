@@ -4,7 +4,7 @@
    Fonts: Cormorant Garamond (serif display) · Inter (body) · JetBrains Mono (code)
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Cormorant+Garamond:wght@400;500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
 
 /* ── Design Tokens ──────────────────────────────────────── */
 :root {
@@ -1257,8 +1257,7 @@
 .lca-svg-graph circle,
 .lca-svg-graph polygon,
 .lca-svg-graph text {
-  transition: d 0.45s cubic-bezier(0.25, 0.8, 0.25, 1),
-              points 0.45s cubic-bezier(0.25, 0.8, 0.25, 1),
+  transition: points 0.45s cubic-bezier(0.25, 0.8, 0.25, 1),
               cx 0.45s cubic-bezier(0.25, 0.8, 0.25, 1),
               cy 0.45s cubic-bezier(0.25, 0.8, 0.25, 1),
               x 0.45s cubic-bezier(0.25, 0.8, 0.25, 1),
@@ -1417,7 +1416,7 @@
 .lca-container.lca-neubrutalist .lca-svg-graph line,
 .lca-container.lca-neubrutalist .lca-svg-graph circle,
 .lca-container.lca-neubrutalist .lca-svg-graph polygon {
-  transition: d 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+
               points 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275),
               cx 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275),
               cy 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;

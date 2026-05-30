@@ -21,8 +21,9 @@ async function getGroqKey() {
 let apiQueue = Promise.resolve();
 
 
-// ── Batch Cache (to stay under 15 RPM) ───────────────────
-let batchCache = new Map(); // key -> { data, timestamp }
+
+
+
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   console.log('[LCA] Message received:', message.type);
@@ -77,6 +78,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
+
+
   if (message.type === 'GET_SETTINGS') {
     chrome.storage.sync.get(['groqApiKey', 'autoAnalyze', 'analyzeOnWrongAnswer', 'analyzeOnTLE', 'uiStyle'], (result) => {
       sendResponse({
@@ -108,8 +111,9 @@ function buildContext(data) {
   }[verdict] || verdict;
 
   const hasCode = code && code.trim().length > 10;
+  const codeTruncated = hasCode && code.length > 2000;
   const codeBlock = hasCode
-    ? `\n\nCODE (${language}):\n\`\`\`\n${code.slice(0, 2000)}\n\`\`\``
+    ? `\n\nCODE (${language}):\n\`\`\`\n${code.slice(0, 2000)}${codeTruncated ? '\n... [truncated — showing first 2000 chars]' : ''}\n\`\`\``
     : '\n\n(Code unavailable — analyze from stats only)';
 
   return `PROBLEM: "${problemTitle}" (${difficulty || 'Unknown'})
@@ -120,9 +124,6 @@ MEMORY: ${memory || 'N/A'}${memoryBeat ? ` (Beats ${memoryBeat})` : ''}${codeBlo
 }
 
 
-function getSubmissionKey(data) {
-  return `${data.problemTitle}_${data.language}_${data.code.slice(0, 100)}_${data.verdict}`;
-}
 
 // cyrb53 hash function: fast, non-cryptographic 53-bit hash
 function cyrb53(str, seed = 0) {
@@ -166,7 +167,11 @@ async function setCache(key, value) {
 
 
 async function handleFullAnalysis(data) {
-  const cacheKey = `analysis_${cyrb53(data.problemTitle + data.language + data.code)}`;
+  if (!data || !data.problemTitle || !data.code || !data.language) {
+    throw new Error('Invalid analysis payload: missing required fields');
+  }
+
+  const cacheKey = `analysis_${cyrb53(data.problemTitle + data.language + data.code + data.verdict)}`;
   const cached = await getCache(cacheKey);
   if (cached) {
     console.log('[LCA] Cache hit for FULL_ANALYSIS');
@@ -222,7 +227,7 @@ Rules:
 
 
 // ── callGroq with Retry & Exponential Backoff ───────────
-async function callGroqWithRetry(prompt, maxTokens = 800, retries = 5, model = GROQ_MODEL) {
+async function callGroqWithRetry(prompt, maxTokens = 800, retries = 3, model = GROQ_MODEL) {
   let lastErr;
   for (let i = 0; i < retries; i++) {
     try {
@@ -253,89 +258,64 @@ async function callGroq(prompt, maxTokens = 800, model = GROQ_MODEL) {
   const apiKey = await getGroqKey();
   if (!apiKey) throw new Error('INVALID_API_KEY');
 
-  const controller = new AbortController();
-  const timeoutMs = 40000;
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-
   const url = `${GROQ_BASE}/chat/completions`;
-
   const body = {
     model: model,
-    messages: [
-      { role: "user", content: prompt }
-    ],
+    messages: [{ role: "user", content: prompt }],
     temperature: 0.2,
-    max_tokens: maxTokens
+    max_tokens: maxTokens,
+    stream: false
   };
 
-  console.log(`[LCA] Calling Groq (${model}) (max_tokens: ${maxTokens})...`);
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify(body)
+  });
 
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-        'HTTP-Referer': 'https://leetcode.com',
-        'X-Title': 'Orthex'
-      },
-      body: JSON.stringify(body),
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      const errData = await response.json().catch(() => ({}));
-      const errMsg = errData?.error?.message || `HTTP ${response.status}`;
-
-      if (response.status === 401 || (response.status === 400 && errMsg.includes('API key'))) throw new Error('INVALID_API_KEY');
-      if (response.status === 429) throw new Error('RATE_LIMIT');
-
-      throw new Error(`Groq API error: ${errMsg}`);
-    }
-
-    const data = await response.json();
-    return data;
-  } catch (err) {
-    clearTimeout(timeoutId);
-    if (err.name === 'AbortError') throw new Error('TIMEOUT');
-    throw err;
+  if (!response.ok) {
+    throw new Error(`Groq error: HTTP ${response.status}`);
   }
+
+  return await response.json();
 }
 
-// ── Unified Streaming API Call (Groq) ──────────
-async function callGroqStreaming(prompt, maxTokens, model, tabId, solutionType) {
+// ── Streaming Groq API Call ───────────────────────────
+async function callGroqStreaming(prompt, maxTokens = 800, model = GROQ_MODEL, tabId, solutionType) {
   const apiKey = await getGroqKey();
   if (!apiKey) throw new Error('INVALID_API_KEY');
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 180000); // 3-min timeout
-  const url = `${GROQ_BASE}/chat/completions`;
+  const timeoutMs = 120000; // 120 seconds max timeout for full generation
+  let timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
+  const url = `${GROQ_BASE}/chat/completions`;
   const body = {
-    model: GROQ_MODEL,
+    model: model,
     messages: [{ role: "user", content: prompt }],
     temperature: 0.2,
     max_tokens: maxTokens,
     stream: true
   };
 
-  const headers = {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${apiKey}`
-  };
-
   try {
     const response = await fetch(url, {
       method: 'POST',
-      headers,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
       body: JSON.stringify(body),
       signal: controller.signal
     });
 
-    clearTimeout(timeoutId);
-    if (!response.ok) throw new Error(`Groq Streaming error: HTTP ${response.status}`);
+    if (!response.ok) {
+      clearTimeout(timeoutId);
+      throw new Error(`Groq Streaming error: HTTP ${response.status}`);
+    }
 
     const reader = response.body.getReader();
     const decoder = new TextDecoder('utf-8');
@@ -343,6 +323,10 @@ async function callGroqStreaming(prompt, maxTokens, model, tabId, solutionType) 
     let buffer = '';
 
     while (true) {
+      // Reset timeout on each chunk received so slow streams don't die prematurely
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
       const { done, value } = await reader.read();
       if (done) break;
       buffer += decoder.decode(value, { stream: true });
@@ -358,13 +342,11 @@ async function callGroqStreaming(prompt, maxTokens, model, tabId, solutionType) 
             const chunk = data.choices?.[0]?.delta?.content || '';
             if (chunk) {
               fullText += chunk;
-              if (tabId) {
+              if (tabId && solutionType) {
                 chrome.tabs.sendMessage(tabId, { type: 'ANALYZE_STREAM_CHUNK', solutionType, chunk });
               }
             }
-          } catch (e) {
-            // Ignore parse errors on chunks
-          }
+          } catch (e) {}
         }
       }
     }
@@ -378,7 +360,7 @@ async function callGroqStreaming(prompt, maxTokens, model, tabId, solutionType) 
           const chunk = data.choices?.[0]?.delta?.content || '';
           if (chunk) {
             fullText += chunk;
-            if (tabId) {
+            if (tabId && solutionType) {
               chrome.tabs.sendMessage(tabId, { type: 'ANALYZE_STREAM_CHUNK', solutionType, chunk });
             }
           }
@@ -386,8 +368,10 @@ async function callGroqStreaming(prompt, maxTokens, model, tabId, solutionType) 
       }
     }
     
+    clearTimeout(timeoutId);
+    
     // Notify stream complete
-    if (tabId) {
+    if (tabId && solutionType) {
       chrome.tabs.sendMessage(tabId, { type: 'ANALYZE_STREAM_DONE', solutionType });
     }
     
@@ -426,10 +410,8 @@ function parseSection(data, requiredKeys) {
     // Deep JSON repair and parse
     let parsed;
     try {
-      // 1. Remove comments
-      let commentCleaned = cleaned.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1');
-      // 2. Remove trailing commas
-      commentCleaned = commentCleaned.replace(/,\s*([\]}])/g, '$1');
+      // 1. Remove trailing commas instead of comments (which break JSON code blocks)
+      let commentCleaned = cleaned.replace(/,\s*([\]}])/g, '$1');
       // 3. Escape bare control characters (literal newlines/tabs) inside JSON strings
       //    This is the most common cause of "Bad control character" errors when AI
       //    embeds real newlines in code fields instead of escaped \n sequences.
@@ -607,6 +589,7 @@ function autoCloseJSON(str) {
 }
 
 async function handleGenerateSolutions(data, tabId) {
+  if (!data || !data.problemTitle || !data.language) throw new Error('Invalid payload');
   const { problemTitle, difficulty, language, description, defaultCode } = data;
 
   // ── PASS 1: Generate all solutions (code + complexity only) ──────────────────
