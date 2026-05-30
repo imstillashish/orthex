@@ -596,10 +596,10 @@ async function handleGenerateSolutions(data, tabId) {
   // ── PASS 1: Generate all solutions (code + complexity only) ──────────────────
   // Keeping stepByStep OUT of the first pass avoids JSON truncation on large outputs.
   const pass1Prompt = `You are a world-class competitive programming coach.
-Given the following LeetCode problem, generate ALL distinct solution approaches:
-- The Intern Approach
-- L5 Engineer Approach (if a meaningfully different middle approach exists)
-- Staff Architect Approach
+Given the following LeetCode problem, generate ALL distinct solution approaches based on the following personas:
+- "The Intern Approach": A brute-force, naive solution. It should be the most obvious but least optimal approach.
+- "L5 Engineer Approach": A better solution, but not fully optimal (e.g., uses extra space, or slightly slower time complexity). Generate this if a meaningfully different middle approach exists.
+- "Staff Architect Approach": The most optimal and elegant solution possible (best time and space complexity).
 
 Problem Title: "${problemTitle}"
 Difficulty: "${difficulty}"
@@ -690,7 +690,12 @@ Additional rules:
       solutions[i].stepByStep = fullText.trim();
     } catch (err) {
       console.warn(`[LCA] Pass 2 stepByStep failed for ${sol.type}:`, err.message);
-      solutions[i].stepByStep = `**Step-by-step breakdown could not be generated.** (Error: ${err.message}) Please regenerate.`;
+      const errMsg = `\n\n**Step-by-step breakdown could not be generated.** (Error: ${err.message}) Please regenerate.`;
+      solutions[i].stepByStep += errMsg;
+      if (tabId) {
+        chrome.tabs.sendMessage(tabId, { type: 'ANALYZE_STREAM_CHUNK', solutionType: sol.type, chunk: errMsg });
+        chrome.tabs.sendMessage(tabId, { type: 'ANALYZE_STREAM_DONE', solutionType: sol.type });
+      }
     }
   }
 
@@ -707,6 +712,11 @@ async function handleGenerateSingleSolution(data, tabId) {
   // ── PASS 1: Generate the single solution (code + complexity) ──
   const pass1Prompt = `You are a world-class competitive programming coach.
 Generate ONLY the ${solutionType} solution for the following LeetCode problem.
+
+For context on the requested solution type:
+- "The Intern Approach": A brute-force, naive solution. It should be the most obvious but least optimal approach.
+- "L5 Engineer Approach": A better solution, but not fully optimal (e.g., uses extra space, or slightly slower time complexity).
+- "Staff Architect Approach": The most optimal and elegant solution possible (best time and space complexity).
 
 Problem Title: "${problemTitle}"
 Difficulty: "${difficulty}"
@@ -779,7 +789,12 @@ Additional rules:
     sol.stepByStep = fullText.trim();
   } catch (err) {
     console.warn(`[LCA] Single Solution Pass 2 stepByStep failed:`, err.message);
-    sol.stepByStep = `**Step-by-step breakdown could not be generated.** (Error: ${err.message}) Please try again.`;
+    const errMsg = `\n\n**Step-by-step breakdown could not be generated.** (Error: ${err.message}) Please try again.`;
+    sol.stepByStep += errMsg;
+    if (tabId) {
+      chrome.tabs.sendMessage(tabId, { type: 'ANALYZE_STREAM_CHUNK', solutionType: sol.type, chunk: errMsg });
+      chrome.tabs.sendMessage(tabId, { type: 'ANALYZE_STREAM_DONE', solutionType: sol.type });
+    }
   }
 
   const finalResult = { solution: sol };
