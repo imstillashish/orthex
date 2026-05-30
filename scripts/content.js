@@ -1229,8 +1229,8 @@ function errHtml(msg, type, id, data, renderFn) {
     <div class="lca-err-txt">
       <strong>Error:</strong> ${esc(displayMsg)}
       ${extraHtml}
-      <div>
-        <button class="lca-retry-btn" style="display:flex; align-items:center; gap:4px; margin:0 auto;">${ICON_REGEN} Retry</button>
+      <div style="margin-top:8px;">
+        <button class="lca-retry-btn" style="display:inline-flex; align-items:center; justify-content:center; gap:4px; padding:4px 12px; height:26px;">${ICON_REGEN} Retry</button>
       </div>
     </div>
   </div>`;
@@ -1592,7 +1592,7 @@ async function openSolutionsPanel() {
       // Empty state — show a "Generate" button
       bodyEl.innerHTML = `
         <div style="text-align:center; padding:40px 20px 32px;">
-          <div style="margin-bottom:12px;">${ICON_LIGHTBULB}</div>
+          <div style="margin-bottom:12px; display:flex; justify-content:center; align-items:center;">${ICON_LIGHTBULB}</div>
           <div style="font-family:'Bricolage Grotesque',sans-serif; font-size:17px; font-weight:700; color:var(--lca-text-head); margin-bottom:6px;">${type} Solution</div>
           <div style="font-size:13px; color:var(--lca-muted); margin-bottom:24px; max-width:320px; margin-left:auto; margin-right:auto; line-height:1.5;">
             Click the button below to generate the ${type.toLowerCase()} approach with a full step-by-step breakdown.
@@ -1621,8 +1621,8 @@ async function openSolutionsPanel() {
 
       <div class="lca-note lca-code-block" style="border:1px solid var(--lca-primary-border); border-radius:6px; padding:12px 14px; position:relative; overflow:hidden; margin-bottom:16px;">
         <div style="position:absolute; right:8px; top:8px; display:flex; gap:6px;">
-          <button id="lca-sol-paste-btn" class="lca-retry-btn" style="font-size:10px; padding:4px 8px; height:26px; display:flex; align-items:center; gap:4px;">${ICON_PASTE} Paste to Editor</button>
-          <button id="lca-sol-copy-btn" class="lca-retry-btn" style="font-size:10px; padding:4px 8px; height:26px; display:flex; align-items:center; gap:4px;">${ICON_COPY} Copy</button>
+          <button id="lca-sol-paste-btn" class="lca-retry-btn" style="font-size:10px; padding:4px 8px; height:26px; display:inline-flex; align-items:center; justify-content:center; gap:4px;">${ICON_PASTE} Paste to Editor</button>
+          <button id="lca-sol-copy-btn" class="lca-retry-btn" style="font-size:10px; padding:4px 8px; height:26px; display:inline-flex; align-items:center; justify-content:center; gap:4px;">${ICON_COPY} Copy</button>
         </div>
         <pre style="margin:0; font-family:'JetBrains Mono',monospace; font-size:12.5px; overflow-x:auto; color:var(--lca-ink); padding-top:4px; line-height:1.5;">${highlightSyntax(sol.code)}</pre>
       </div>
