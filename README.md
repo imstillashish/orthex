@@ -2,7 +2,7 @@
   <img src="assets/orthex_presentation_banner.png" alt="Orthex Banner" width="100%">
   <br/><br/>
 
-  <img src="https://img.shields.io/badge/AI%20Powered-Groq%20%2F%20LLaMA%203.3-1591dc?style=for-the-badge&logo=lightning&logoColor=white" alt="AI Powered"/>
+  <img src="https://img.shields.io/badge/AI%20Powered-Groq%20%2F%20GPT--OSS%20120b-1591dc?style=for-the-badge&logo=lightning&logoColor=white" alt="AI Powered"/>
   <img src="https://img.shields.io/badge/Chrome%20Extension-Manifest%20V3-2c5ead?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Chrome Extension"/>
   <img src="https://img.shields.io/badge/LeetCode-Integrated-5db8a6?style=for-the-badge&logo=leetcode&logoColor=white" alt="LeetCode"/>
   <img src="https://img.shields.io/badge/Cost-Free-e8a55a?style=for-the-badge&logo=opensourceinitiative&logoColor=white" alt="Free"/>
@@ -103,7 +103,7 @@ Submit on LeetCode
   language, verdict, runtime, memory, and code
         ↓
   service-worker.js sends a structured prompt
-  to Groq  →  llama-3.3-70b-versatile
+  to Groq  →  openai/gpt-oss-120b
         ↓
   JSON response parsed into 4 analysis panels
         ↓
@@ -195,7 +195,7 @@ Your API key is stored locally in Chrome's sync storage. **We never see your cod
 
 | Property | Value |
 |---|---|
-| <img src="https://www.google.com/s2/favicons?domain=meta.com&sz=16" width="16" height="16" align="middle" alt="Meta"/> **Model** | `llama-3.3-70b-versatile` via Groq |
+| <img src="https://www.google.com/s2/favicons?domain=openai.com&sz=16" width="16" height="16" align="middle" alt="OpenAI"/> **Model** | `openai/gpt-oss-120b` via Groq |
 | **Tokens / analysis** | ~800 (prompt + response) |
 | **Tokens / solution** | Up to 4,000 per approach |
 | <img src="https://www.google.com/s2/favicons?domain=groq.com&sz=16" width="16" height="16" align="middle" alt="Groq"/> **Rate limit handling** | Exponential backoff in service worker |

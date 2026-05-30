@@ -1,0 +1,28 @@
+{
+  "name": "orthex-promo-vfx",
+  "version": "1.0.0",
+  "description": "WebGL accelerated Remotion video for Orthex",
+  "scripts": {
+    "start": "remotion preview src/index.ts",
+    "build": "remotion render src/index.ts PromoLandscape out/video.mp4"
+  },
+  "dependencies": {
+    "@react-three/drei": "^9.0.0",
+    "@react-three/fiber": "^8.0.0",
+    "@react-three/postprocessing": "^2.16.2",
+    "@remotion/animated-emoji": "^4.0.469",
+    "@remotion/transitions": "^4.0.469",
+    "postprocessing": "^6.39.1",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "remotion": "^4.0.0",
+    "three": "^0.160.0"
+  },
+  "devDependencies": {
+    "@remotion/bundler": "^4.0.469",
+    "@remotion/cli": "^4.0.469",
+    "@types/react": "^18.0.0",
+    "@types/three": "^0.160.0",
+    "typescript": "^5.0.0"
+  }
+}

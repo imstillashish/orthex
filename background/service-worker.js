@@ -2,10 +2,11 @@
 // Orthex — Service Worker (Background)
 // 3 sequential focused API calls: Approach → Efficiency → Code Style
 // Each call is small (~200-300 tokens) to avoid timeouts
-// Powered by Groq using llama-3.3-70b-versatile (BYOK model)
+// Powered by Groq using openai/gpt-oss-120b (BYOK model)
 // ============================================================
 
-const GROQ_MODEL         = 'llama-3.3-70b-versatile';
+const GROQ_API_URL       = 'https://api.groq.com/openai/v1/chat/completions';
+const GROQ_MODEL         = 'openai/gpt-oss-120b';
 const GROQ_BASE          = 'https://api.groq.com/openai/v1';
 
 // Helper: get the stored Groq API key
