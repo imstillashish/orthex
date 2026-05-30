@@ -1118,7 +1118,7 @@
 }
 .lca-container.lca-neubrutalist.lca-dark #lca-w-style,
 .lca-dark .lca-container.lca-neubrutalist #lca-w-style {
-  background: #3a1024 !important; /* Rich Deep Cyber Pink/Plum */
+  background: #F8BBD0 !important; /* Match Light Mode Pink */
   border-bottom-color: #333333 !important;
 }
 .lca-container.lca-neubrutalist.lca-dark .lca-widget:last-child,
@@ -2032,4 +2032,16 @@
 .lca-dark .lca-container.lca-neubrutalist .c-p,
 .lca-dark .lca-container.lca-neubrutalist .c-f {
   box-shadow: 2px 2px 0px #333333 !important;
+}
+
+/* Temporary fix: Force light mode text colors for #lca-w-style in dark mode since background is light pink */
+.lca-container.lca-neubrutalist.lca-dark #lca-w-style,
+.lca-dark .lca-container.lca-neubrutalist #lca-w-style {
+  color: #000000 !important;
+}
+.lca-container.lca-neubrutalist.lca-dark #lca-w-style .lca-wh-title,
+.lca-dark .lca-container.lca-neubrutalist #lca-w-style .lca-wh-title,
+.lca-container.lca-neubrutalist.lca-dark #lca-w-style p,
+.lca-dark .lca-container.lca-neubrutalist #lca-w-style p {
+  color: #000000 !important;
 }
