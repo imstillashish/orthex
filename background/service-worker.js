@@ -303,19 +303,44 @@ async function callGroqStreaming(prompt, maxTokens = 800, model = GROQ_MODEL, ta
   };
 
   try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify(body),
-      signal: controller.signal
-    });
+    let response;
+    let attempt = 0;
+    const maxRetries = 3;
+
+    while (attempt <= maxRetries) {
+      try {
+        response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+          },
+          body: JSON.stringify(body),
+          signal: controller.signal
+        });
+
+        if (response.status === 429 && attempt < maxRetries) {
+          attempt++;
+          console.warn(`[LCA] Streaming rate limit hit (429). Retrying in ${attempt * 2}s...`);
+          await new Promise(r => setTimeout(r, attempt * 2000));
+          continue;
+        }
+        
+        break;
+      } catch (fetchErr) {
+        if (fetchErr.name === 'AbortError') throw fetchErr;
+        if (attempt < maxRetries) {
+          attempt++;
+          await new Promise(r => setTimeout(r, attempt * 2000));
+          continue;
+        }
+        throw fetchErr;
+      }
+    }
 
     if (!response.ok) {
       clearTimeout(timeoutId);
-      throw new Error(`Groq Streaming error: HTTP ${response.status}`);
+      throw new Error(`Groq Streaming error: HTTP ${response?.status}`);
     }
 
     const reader = response.body.getReader();
@@ -747,8 +772,16 @@ Rules:
 
   console.log(`[LCA] Single Solution Pass 1: generating ${solutionType} code...`);
   const pass1Raw = await callGroqWithRetry(pass1Prompt, 1500, 5, GROQ_MODEL);
-  const sol = parseSection(pass1Raw, ['type', 'code']);
-  if (!sol || !sol.code) throw new Error(`Failed to generate ${solutionType} solution code.`);
+  let sol = parseSection(pass1Raw, ['type', 'code', 'solutions']);
+  if (sol.solutions && Array.isArray(sol.solutions)) {
+    sol = sol.solutions[0];
+  } else if (Array.isArray(sol)) {
+    sol = sol[0];
+  }
+  if (!sol || !sol.code) {
+    console.error(`[LCA] Invalid structure for ${solutionType}. Raw parsed:`, sol);
+    throw new Error(`Failed to generate ${solutionType} solution code.`);
+  }
 
   if (tabId) {
     chrome.tabs.sendMessage(tabId, { type: 'ANALYZE_PASS1_DONE', solutionType, code: sol.code, timeComplexity: sol.timeComplexity, spaceComplexity: sol.spaceComplexity });
