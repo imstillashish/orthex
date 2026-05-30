@@ -1108,12 +1108,12 @@
 /* Colorful cyberpunk retro-pop dark neubrutalist backgrounds */
 .lca-container.lca-neubrutalist.lca-dark #lca-w-approach,
 .lca-dark .lca-container.lca-neubrutalist #lca-w-approach {
-  background: #3e3000 !important; /* Rich Dark Cyber Gold */
+  background: #FFE082 !important; /* Match Light Mode Yellow */
   border-bottom-color: #333333 !important;
 }
 .lca-container.lca-neubrutalist.lca-dark #lca-w-efficiency,
 .lca-dark .lca-container.lca-neubrutalist #lca-w-efficiency {
-  background: #00303a !important; /* Rich Deep Cyber Cyan */
+  background: #80DEEA !important; /* Match Light Mode Cyan */
   border-bottom-color: #333333 !important;
 }
 .lca-container.lca-neubrutalist.lca-dark #lca-w-style,
@@ -2034,11 +2034,23 @@
   box-shadow: 2px 2px 0px #333333 !important;
 }
 
-/* Temporary fix: Force light mode text colors for #lca-w-style in dark mode since background is light pink */
+/* Temporary fix: Force light mode text colors for all colored widgets in dark mode since backgrounds are light */
+.lca-container.lca-neubrutalist.lca-dark #lca-w-approach,
+.lca-dark .lca-container.lca-neubrutalist #lca-w-approach,
+.lca-container.lca-neubrutalist.lca-dark #lca-w-efficiency,
+.lca-dark .lca-container.lca-neubrutalist #lca-w-efficiency,
 .lca-container.lca-neubrutalist.lca-dark #lca-w-style,
 .lca-dark .lca-container.lca-neubrutalist #lca-w-style {
   color: #000000 !important;
 }
+.lca-container.lca-neubrutalist.lca-dark #lca-w-approach .lca-wh-title,
+.lca-dark .lca-container.lca-neubrutalist #lca-w-approach .lca-wh-title,
+.lca-container.lca-neubrutalist.lca-dark #lca-w-approach p,
+.lca-dark .lca-container.lca-neubrutalist #lca-w-approach p,
+.lca-container.lca-neubrutalist.lca-dark #lca-w-efficiency .lca-wh-title,
+.lca-dark .lca-container.lca-neubrutalist #lca-w-efficiency .lca-wh-title,
+.lca-container.lca-neubrutalist.lca-dark #lca-w-efficiency p,
+.lca-dark .lca-container.lca-neubrutalist #lca-w-efficiency p,
 .lca-container.lca-neubrutalist.lca-dark #lca-w-style .lca-wh-title,
 .lca-dark .lca-container.lca-neubrutalist #lca-w-style .lca-wh-title,
 .lca-container.lca-neubrutalist.lca-dark #lca-w-style p,
