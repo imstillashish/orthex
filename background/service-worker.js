@@ -665,7 +665,8 @@ Rules:
 4. Each solution must be directly runnable on LeetCode — include all required imports at the top if needed.
 5. Use double-quoted strings in JSON. Escape all inner double quotes as \\" and newlines as \\n.
 6. Preserve proper indentation using spaces (2 or 4 based on language convention). Do NOT collapse code to a single line.
-7. Each solution must use a clearly different algorithmic approach.`;
+7. Each solution must use a clearly different algorithmic approach.
+8. CORRECTNESS IS CRITICAL: Double-check logic, array bounds, base cases, and off-by-one errors. Perform a mental dry-run to ensure it perfectly solves the problem.`;
 
   console.log('[LCA] Solutions Pass 1: generating code...');
   const pass1Raw = await callGroqWithRetry(pass1Prompt, 1500, 5, GROQ_MODEL);
@@ -768,7 +769,8 @@ Rules:
 3. You MUST use the exact class/function signature from DEFAULT CODE BOILERPLATE — do not rename it.
 4. The code must be directly runnable on LeetCode — include all required imports at the top if needed.
 5. Use double-quoted strings in JSON. Escape all inner double quotes as \\" and newlines as \\n.
-6. Preserve proper indentation using spaces (2 or 4 depending on language convention). Do NOT collapse the code to a single line.`;
+6. Preserve proper indentation using spaces (2 or 4 depending on language convention). Do NOT collapse the code to a single line.
+7. CORRECTNESS IS CRITICAL: Double-check logic, array bounds, base cases, and off-by-one errors. Perform a mental dry-run to ensure it perfectly solves the problem.`;
 
   console.log(`[LCA] Single Solution Pass 1: generating ${solutionType} code...`);
   const pass1Raw = await callGroqWithRetry(pass1Prompt, 1500, 5, GROQ_MODEL);
