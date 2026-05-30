@@ -659,17 +659,18 @@ Return ONLY a valid JSON object:
 }
 
 Rules:
-1. Output ONLY the raw JSON object — no markdown fences, no commentary, no extra keys.
-2. Each code value MUST be a complete, syntactically correct, properly indented ${language} solution.
-3. ALWAYS use the exact class/function signature from DEFAULT CODE BOILERPLATE — do not rename it.
-4. Each solution must be directly runnable on LeetCode — include all required imports at the top if needed.
-5. Use double-quoted strings in JSON. Escape all inner double quotes as \\" and newlines as \\n.
-6. Preserve proper indentation using spaces (2 or 4 based on language convention). Do NOT collapse code to a single line.
-7. Each solution must use a clearly different algorithmic approach.
-8. CORRECTNESS IS CRITICAL: Double-check logic, array bounds, base cases, and off-by-one errors. Perform a mental dry-run to ensure it perfectly solves the problem.`;
+1. You MUST first think through your approach step-by-step inside a <reasoning> ... </reasoning> block. Draft edge cases, dry-run the logic, and verify correctness BEFORE generating the JSON.
+2. After the reasoning block, output ONLY the raw JSON object — no markdown fences, no commentary outside the reasoning block.
+3. Each code value MUST be a complete, syntactically correct, properly indented ${language} solution.
+4. ALWAYS use the exact class/function signature from DEFAULT CODE BOILERPLATE — do not rename it.
+5. Each solution must be directly runnable on LeetCode — include all required imports at the top if needed.
+6. Use double-quoted strings in JSON. Escape all inner double quotes as \\" and newlines as \\n.
+7. Preserve proper indentation using spaces (2 or 4 based on language convention). Do NOT collapse code to a single line.
+8. Each solution must use a clearly different algorithmic approach.
+9. CORRECTNESS IS CRITICAL: Double-check logic, array bounds, base cases, and off-by-one errors. Perform a mental dry-run to ensure it perfectly solves the problem.`;
 
   console.log('[LCA] Solutions Pass 1: generating code...');
-  const pass1Raw = await callGroqWithRetry(pass1Prompt, 1500, 5, GROQ_MODEL);
+  const pass1Raw = await callGroqWithRetry(pass1Prompt, 2500, 5, GROQ_MODEL);
   const pass1Result = parseSection(pass1Raw, ['solutions']);
   const solutions = pass1Result.solutions || [];
 
@@ -764,16 +765,17 @@ Return ONLY a single valid JSON object (not an array):
 }
 
 Rules:
-1. Output ONLY raw JSON — no markdown fences, no commentary, no extra keys.
-2. The code MUST be complete, syntactically correct, and properly indented for ${language}.
-3. You MUST use the exact class/function signature from DEFAULT CODE BOILERPLATE — do not rename it.
-4. The code must be directly runnable on LeetCode — include all required imports at the top if needed.
-5. Use double-quoted strings in JSON. Escape all inner double quotes as \\" and newlines as \\n.
-6. Preserve proper indentation using spaces (2 or 4 depending on language convention). Do NOT collapse the code to a single line.
-7. CORRECTNESS IS CRITICAL: Double-check logic, array bounds, base cases, and off-by-one errors. Perform a mental dry-run to ensure it perfectly solves the problem.`;
+1. You MUST first think through your approach step-by-step inside a <reasoning> ... </reasoning> block. Draft edge cases, dry-run the logic, and verify correctness BEFORE generating the JSON.
+2. After the reasoning block, output ONLY the raw JSON object — no markdown fences, no commentary outside the reasoning block.
+3. The code MUST be complete, syntactically correct, and properly indented for ${language}.
+4. You MUST use the exact class/function signature from DEFAULT CODE BOILERPLATE — do not rename it.
+5. The code must be directly runnable on LeetCode — include all required imports at the top if needed.
+6. Use double-quoted strings in JSON. Escape all inner double quotes as \\" and newlines as \\n.
+7. Preserve proper indentation using spaces (2 or 4 depending on language convention). Do NOT collapse the code to a single line.
+8. CORRECTNESS IS CRITICAL: Double-check logic, array bounds, base cases, and off-by-one errors. Perform a mental dry-run to ensure it perfectly solves the problem.`;
 
   console.log(`[LCA] Single Solution Pass 1: generating ${solutionType} code...`);
-  const pass1Raw = await callGroqWithRetry(pass1Prompt, 1500, 5, GROQ_MODEL);
+  const pass1Raw = await callGroqWithRetry(pass1Prompt, 2000, 5, GROQ_MODEL);
   let sol = parseSection(pass1Raw, ['type', 'code', 'solutions']);
   if (sol.solutions && Array.isArray(sol.solutions)) {
     sol = sol.solutions[0];
