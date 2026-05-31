@@ -67,7 +67,6 @@ BRAND.md
 .prettierrc*
 tsconfig.json
 promotion_assets/
-updates.xml
 
 # ============================================================
 # AI AGENT INTERNALS — local tooling, not project code
