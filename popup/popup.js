@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadSettings();
   loadGroqKey();
   loadStats();
+  loadUpdates();
 });
 
 // ── SPA Router ──────────────────────────────────────────────
@@ -103,13 +104,15 @@ function updateHomeStatus(hasKey) {
 
 // ── Page: Settings ───────────────────────────────────────────
 function loadSettings() {
-  chrome.storage.sync.get(['autoAnalyze', 'analyzeOnWrongAnswer', 'analyzeOnTLE', 'uiStyle'], (result) => {
+  chrome.storage.sync.get(['autoAnalyze', 'analyzeOnWrongAnswer', 'analyzeOnTLE', 'uiStyle', 'onlyMajorUpdates'], (result) => {
     const ta = document.getElementById('toggle-auto');
     if (ta) ta.checked = result.autoAnalyze !== false;
     const tw = document.getElementById('toggle-wa');
     if (tw) tw.checked = result.analyzeOnWrongAnswer !== false;
     const tt = document.getElementById('toggle-tle');
     if (tt) tt.checked = result.analyzeOnTLE !== false;
+    const tmu = document.getElementById('toggle-only-major');
+    if (tmu) tmu.checked = result.onlyMajorUpdates !== false;
     
     const currentStyle = result.uiStyle || 'classic';
     updatePopupStyleActiveSegment(currentStyle);
@@ -117,7 +120,7 @@ function loadSettings() {
   });
 
   // Save immediately on any toggle change
-  ['toggle-auto', 'toggle-wa', 'toggle-tle'].forEach(id => {
+  ['toggle-auto', 'toggle-wa', 'toggle-tle', 'toggle-only-major'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('change', saveSettings);
   });
@@ -168,6 +171,7 @@ function saveSettings() {
     autoAnalyze:          document.getElementById('toggle-auto')?.checked ?? true,
     analyzeOnWrongAnswer: document.getElementById('toggle-wa')?.checked ?? true,
     analyzeOnTLE:         document.getElementById('toggle-tle')?.checked ?? true,
+    onlyMajorUpdates:     document.getElementById('toggle-only-major')?.checked ?? true,
   });
 }
 
@@ -357,4 +361,58 @@ function loadStats() {
       if (circle) circle.style.strokeDashoffset = offset;
     }, 100); // small delay to allow CSS transition to kick in
   });
+}
+
+// ── Updates ──────────────────────────────────────────────────
+function loadUpdates() {
+  chrome.storage.local.get(['updateAvailable'], (result) => {
+    const container = document.getElementById('update-notification-container');
+    if (result.updateAvailable && container) {
+      const { version, url } = result.updateAvailable;
+      const currentVersion = chrome.runtime.getManifest().version;
+      container.innerHTML = `
+        <div style="margin: 16px 16px 0 16px; padding: 12px; border-radius: 8px; background: rgba(0, 229, 255, 0.05); border: 1px solid var(--lca-primary); display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <div style="background: var(--lca-primary); color: #000; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px;">UPDATE</div>
+              <div style="font-size: 12px; font-weight: 600; color: var(--lca-ink);">v${version} is out!</div>
+            </div>
+            <div style="font-size: 10px; color: var(--lca-muted);">Current: v${currentVersion}</div>
+          </div>
+          <div style="display: flex; gap: 8px; margin-top: 4px;">
+            <button id="btn-get-update" style="flex: 1; background: var(--lca-primary); color: #000; border: none; padding: 6px 0; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer;">Get Update</button>
+            <button id="btn-dismiss-update" style="flex: 1; background: transparent; color: var(--lca-muted); border: 1px solid var(--lca-border); padding: 6px 0; border-radius: 4px; font-size: 12px; cursor: pointer;">Dismiss</button>
+          </div>
+        </div>
+      `;
+      
+      document.getElementById('btn-get-update').addEventListener('click', () => {
+        chrome.tabs.create({ url });
+      });
+      document.getElementById('btn-dismiss-update').addEventListener('click', () => {
+        chrome.storage.local.remove('updateAvailable', () => {
+          container.innerHTML = '';
+        });
+      });
+    }
+  });
+
+  const btnManual = document.getElementById('btn-manual-update-check');
+  const txtStatus = document.getElementById('txt-update-check-status');
+  if (btnManual) {
+    btnManual.addEventListener('click', () => {
+      txtStatus.textContent = "Checking...";
+      chrome.runtime.sendMessage({ type: 'CHECK_FOR_UPDATES_MANUAL' }, (response) => {
+        if (!response || !response.success) {
+          txtStatus.textContent = "Check failed";
+        } else if (response.update) {
+          txtStatus.textContent = "Update found!";
+          loadUpdates(); // Reload UI
+        } else {
+          txtStatus.textContent = "Up to date";
+        }
+        setTimeout(() => { if(txtStatus.textContent !== 'Checking...') txtStatus.textContent = ''; }, 3000);
+      });
+    });
+  }
 }

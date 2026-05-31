@@ -31,6 +31,9 @@
         </div>
       </header>
 
+      <!-- Update Banner Container -->
+      <div id="update-notification-container"></div>
+
       <!-- Activity Card -->
       <section class="p-section lca-widget lca-no-border" style="padding-top: 24px;">
         <div class="p-activity-card">
@@ -164,6 +167,35 @@
               <input type="checkbox" id="toggle-tle" />
               <span class="p-switch-track"></span>
             </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- UPDATES CARD -->
+      <section class="settings-card s-updates-card" style="margin-bottom: 12px;">
+        <div class="s-section-lbl" style="display:flex; justify-content:space-between; align-items:center;">
+          <span>UPDATES</span>
+          <span id="txt-update-check-status" style="font-size: 10px; color: var(--lca-muted); font-weight: normal; text-transform: none;"></span>
+        </div>
+        <div class="p-card-group s-card-group">
+          <div class="p-toggle-row">
+            <div class="p-toggle-info">
+              <div class="p-toggle-desc-wrap">
+                <div class="p-toggle-main">Notify on major updates only</div>
+                <div class="p-toggle-sub">Ignore small point releases</div>
+              </div>
+            </div>
+            <label class="p-switch">
+              <input type="checkbox" id="toggle-only-major" checked />
+              <span class="p-switch-track"></span>
+            </label>
+          </div>
+          <div class="p-toggle-row" style="border-bottom:none; cursor:pointer;" id="btn-manual-update-check">
+            <div class="p-toggle-info">
+              <div class="p-toggle-desc-wrap">
+                <div class="p-toggle-main" style="color:var(--lca-primary);">Check for Updates...</div>
+              </div>
+            </div>
           </div>
         </div>
       </section>

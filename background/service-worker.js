@@ -80,6 +80,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
 
+  if (message.type === 'CHECK_FOR_UPDATES_MANUAL') {
+    checkForUpdates(true)
+      .then((data) => sendResponse({ success: true, update: data }))
+      .catch((err) => sendResponse({ success: false, error: err.message }));
+    return true;
+  }
 
   if (message.type === 'GET_SETTINGS') {
     chrome.storage.sync.get(['groqApiKey', 'autoAnalyze', 'analyzeOnWrongAnswer', 'analyzeOnTLE', 'uiStyle'], (result) => {
@@ -837,3 +843,97 @@ Additional rules:
   const finalResult = { solution: sol };
   return finalResult;
 }
+
+// ── Auto-Update Checker ─────────────────────────────────────
+
+async function checkForUpdates(manual = false) {
+  try {
+    const response = await fetch('https://api.github.com/repos/imstillashish/orthex/releases/latest');
+    if (!response.ok) throw new Error(`GitHub API error: ${response.status}`);
+    const data = await response.json();
+    
+    const latestTag = data.tag_name || ''; // e.g. "v2.0.0" or "2.0.0"
+    const latestVersion = latestTag.replace(/^v/, '');
+    const currentVersion = chrome.runtime.getManifest().version;
+    
+    const currParts = currentVersion.split('.').map(Number);
+    const latParts = latestVersion.split('.').map(Number);
+    
+    if (currParts.length < 3 || latParts.length < 3) return; // Invalid format
+    
+    let isNewer = false;
+    let isMajor = false;
+    
+    if (latParts[0] > currParts[0]) {
+      isNewer = true;
+      isMajor = true;
+    } else if (latParts[0] === currParts[0]) {
+      if (latParts[1] > currParts[1]) {
+        isNewer = true;
+      } else if (latParts[1] === currParts[1] && latParts[2] > currParts[2]) {
+        isNewer = true;
+      }
+    }
+    
+    // Check user preference
+    const { onlyMajorUpdates = true } = await chrome.storage.sync.get('onlyMajorUpdates');
+    
+    if (isNewer && (!onlyMajorUpdates || isMajor)) {
+      const updateData = {
+        version: latestVersion,
+        url: data.html_url,
+        isMajor
+      };
+      
+      const { updateAvailable } = await chrome.storage.local.get('updateAvailable');
+      
+      await chrome.storage.local.set({ updateAvailable: updateData });
+      
+      // If it's a new update we haven't notified about yet
+      if (!updateAvailable || updateAvailable.version !== latestVersion) {
+        chrome.notifications.create('orthex-update', {
+          type: 'basic',
+          iconUrl: 'assets/icon-128.png',
+          title: 'Orthex Update Available',
+          message: `Version ${latestVersion} is now available! Click to view release.`,
+          requireInteraction: true
+        });
+      }
+      return updateData;
+    } else {
+      // Clear if up to date
+      await chrome.storage.local.remove('updateAvailable');
+      return null;
+    }
+  } catch (err) {
+    console.error('[LCA] Update check failed:', err);
+    throw err;
+  }
+}
+
+// Notification click handler
+chrome.notifications.onClicked.addListener((notificationId) => {
+  if (notificationId === 'orthex-update') {
+    chrome.storage.local.get('updateAvailable', (data) => {
+      if (data.updateAvailable && data.updateAvailable.url) {
+        chrome.tabs.create({ url: data.updateAvailable.url });
+      }
+    });
+  }
+});
+
+// Setup alarm on install/startup
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.alarms.create('check-for-updates', { periodInMinutes: 720 }); // Every 12 hours
+  checkForUpdates();
+});
+
+chrome.runtime.onStartup.addListener(() => {
+  checkForUpdates();
+});
+
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === 'check-for-updates') {
+    checkForUpdates();
+  }
+});

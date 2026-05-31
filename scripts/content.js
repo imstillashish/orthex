@@ -141,6 +141,14 @@ patchHistory();
 
 // Listen to storage changes for hot-swapping styles dynamically
 chrome.storage.onChanged.addListener((changes, namespace) => {
+  if (namespace === 'local' && changes.updateAvailable) {
+    if (changes.updateAvailable.newValue) {
+      showUpdateBanner(changes.updateAvailable.newValue);
+    } else {
+      removeUpdateBanner();
+    }
+  }
+
   if (namespace === 'sync' && changes.uiStyle) {
     const newStyle = changes.uiStyle.newValue || 'classic';
     
@@ -233,6 +241,44 @@ function resetAnalysisState() {
   btnInjected = false;
   analysisRan = false;
   lastAnalyzedSignature = null;
+}
+
+function showUpdateBanner(updateData) {
+  if (document.getElementById('orthex-update-banner')) return;
+  const mainContainer = document.getElementById('lca-main-container');
+  if (!mainContainer) return;
+  
+  const banner = document.createElement('div');
+  banner.id = 'orthex-update-banner';
+  banner.className = 'lca-widget ' + getThemeClass();
+  banner.style.border = '1px solid var(--lca-primary)';
+  banner.style.background = 'rgba(0, 229, 255, 0.05)';
+  banner.style.marginBottom = '16px';
+  banner.innerHTML = `
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; gap: 12px; flex-wrap: wrap;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="background: var(--lca-primary); color: #000; font-size: 11px; font-weight: bold; padding: 2px 8px; border-radius: 4px;">UPDATE</div>
+        <div style="font-size: 13px; font-weight: 600; color: var(--lca-ink);">v${updateData.version} is out!</div>
+      </div>
+      <div style="display: flex; gap: 8px; flex: 1; justify-content: flex-end;">
+        <button id="lca-btn-update-get" style="background: var(--lca-primary); color: #000; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer;">Download</button>
+        <button id="lca-btn-update-dismiss" style="background: transparent; color: var(--lca-muted); border: 1px solid var(--lca-border); padding: 6px 12px; border-radius: 4px; font-size: 12px; cursor: pointer;">Dismiss</button>
+      </div>
+    </div>
+  `;
+  // Insert below gradient bg
+  mainContainer.insertBefore(banner, mainContainer.children[1]);
+
+  document.getElementById('lca-btn-update-get').addEventListener('click', () => {
+    window.open(updateData.url, '_blank');
+  });
+  document.getElementById('lca-btn-update-dismiss').addEventListener('click', () => {
+    chrome.storage.local.remove('updateAvailable');
+  });
+}
+
+function removeUpdateBanner() {
+  document.getElementById('orthex-update-banner')?.remove();
 }
 
 // ─── Main tick ────────────────────────────────────────────
@@ -598,6 +644,10 @@ async function runAnalysis(data) {
 
   // Ensure visibility
   mainContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  chrome.storage.local.get(['updateAvailable'], (res) => {
+    if (res.updateAvailable) showUpdateBanner(res.updateAvailable);
+  });
 
   // Run full analysis if not cached
   if (!cached) {
