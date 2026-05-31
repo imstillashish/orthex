@@ -1,20 +1,138 @@
-# Agent internals
+# ============================================================
+# ENVIRONMENT & SECRETS — CRITICAL: never commit these
+# ============================================================
+.env
+.env.*
+.env.local
+.env.development
+.env.production
+.env.staging
+*.secret
+*.secrets
+secrets.json
+config.local.json
+credentials.json
+
+# ============================================================
+# API KEYS & CERTIFICATES
+# ============================================================
+*.pem
+*.p12
+*.pfx
+*.key
+*.cert
+*.crt
+*.keystore
+*.jks
+
+# ============================================================
+# CHROME EXTENSION BUILD ARTIFACTS
+# ============================================================
+*.crx
+*.xpi
+*.zip
+*.tar.gz
+
+# ============================================================
+# NODE / JS BUILD ARTIFACTS
+# ============================================================
+node_modules/
+dist/
+build/
+.cache/
+*.tgz
+package.json
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# ============================================================
+# VIDEO & MEDIA TOOLING (not needed for extension)
+# ============================================================
+walkthrough-video/
+backend-learning-videos/
+*.mp4
+*.mov
+*.webm
+*.avi
+
+# ============================================================
+# DEV-ONLY FILES (not needed in public repo)
+# ============================================================
+demo.html
+DESIGN.md
+BRAND.md
+.stylelintrc.json
+.eslintrc*
+.prettierrc*
+tsconfig.json
+
+# ============================================================
+# AI AGENT INTERNALS — local tooling, not project code
+# ============================================================
 .agent/
 .agents/
 graphify-out/
 scratch/
-skills-lock.json
 specs/
 idea-validation-agents/
+skills-lock.json
+opencode.json
+CLAUDE.md
+AGENTS.md
 
-# Resume and personal docs
-*.tex
-BRAND.md
+# ============================================================
+# OS & EDITOR JUNK
+# ============================================================
+.DS_Store
+.DS_Store?
+Thumbs.db
+ehthumbs.db
+desktop.ini
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
 
-# Test scripts (kept locally but ignored to avoid pushing API keys)
-test_*.js
+# ============================================================
+# LOGS & CRASH REPORTS
+# ============================================================
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+*.log
+logs/
 
-# Local development and scratch files
-node_modules/
+# ============================================================
+# PYTHON ARTIFACTS
+# ============================================================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+.venv/
+venv/
+
+# ============================================================
+# SCRATCH & TEST FILES
+# ============================================================
 scratch_*.js
+test_*.js
 test_mermaid.html
+get_roast.js
+parse_roast.js
+patch.py
+patch_content.js
+roast.txt
+clean_roast.txt
+
+# ============================================================
+# PERSONAL / PII DOCUMENTS
+# ============================================================
+*.tex
+*.pdf
