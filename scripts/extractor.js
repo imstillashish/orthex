@@ -1,6 +1,7 @@
 // ============================================================
 // Orthex — LeetCode Data Extractor
 // Extracts submission data from LeetCode's React SPA DOM
+// ponytail: skipped adding test frameworks for these DOM extraction functions. Add when LeetCode introduces regular A/B testing on their UI layout.
 // ============================================================
 
 /**

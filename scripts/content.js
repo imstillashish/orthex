@@ -73,14 +73,20 @@ function sanitizeMermaidSource(src) {
     .replace(/&amp;/g, '&')
     .replace(/&quot;/g, '"');
 
-  // Auto-quote unquoted node labels that contain special characters.
+  // Strip leading non-mermaid text (anything before the first known diagram keyword)
+  const diagramTypeMatch = s.match(/^[ \t]*(?:graph|flowchart|sequenceDiagram|stateDiagram|classDiagram|pie|gantt|erDiagram|journey|gitGraph|mindmap|timeline|quadrantChart|xychart|block-beta|packet-beta)\b/m);
+  if (diagramTypeMatch) {
+    s = s.substring(diagramTypeMatch.index);
+  }
+
+  // Auto-quote unquoted node labels that contain special characters (including colons).
   // Matches patterns like:  A[some label (with parens)]  or  B(text/slashes)
   // Only touches labels that are NOT already quoted.
   // Bracket types: [ ], ( ), [[ ]], [/ /], { }
   const labelRe = /(\w[\w\s]*?)(\[{1,2}|(?<!\()\((?!\()|\{)(?!")([^"[\](){}]+?)(\]{1,2}|\)|\})/g;
   s = s.replace(labelRe, (match, id, open, label, close) => {
     // If the label has any special chars, wrap in double-quotes
-    if (/[()\/\\<>{}|#!@%^&*+= ]/.test(label)) {
+    if (/[()\/\\<>{}|#!@%^&*+= :]/.test(label)) {
       return `${id}${open}"${label.replace(/"/g, "'")}"${close}`;
     }
     return match;
@@ -112,15 +118,55 @@ async function renderMermaidDiagrams(scope) {
     window.mermaid.initialize({ theme, startOnLoad: false, securityLevel: 'loose' });
   } catch (_) {}
 
-  // Let mermaid process all diagrams automatically.
-  // It reads the textContent (which safely contains our escaped < > characters)
-  try {
-    await window.mermaid.run({ 
-      querySelector: '.mermaid:not([data-processed])',
-      suppressErrors: true 
-    });
-  } catch (err) {
-    console.warn('[LCA] Mermaid run error:', err);
+  const nodes = scope.querySelectorAll('.mermaid:not([data-processed])');
+  for (const node of nodes) {
+    try {
+      const code = node.textContent;
+      // Parse first to validate syntax and prevent mermaid from injecting an error SVG
+      await window.mermaid.parse(code, { suppressErrors: false });
+      await window.mermaid.run({ nodes: [node], suppressErrors: true });
+    } catch (err) {
+      console.warn('[LCA] Mermaid parse error, falling back to raw code:', err);
+      node.classList.remove('mermaid');
+      node.setAttribute('data-processed', 'true');
+      node.innerHTML = `<pre style="background:var(--lca-bg-tertiary);padding:1em;border-radius:6px;overflow-x:auto;"><code style="font-family:monospace;font-size:13px;white-space:pre;">${node.textContent.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code></pre>`;
+    }
+  }
+}
+
+async function renderNomnomlDiagrams(scope) {
+  if (!window.nomnoml || !scope) return;
+  const nodes = scope.querySelectorAll('.nomnoml:not([data-processed])');
+  for (const node of nodes) {
+    try {
+      const code = node.textContent;
+      // We must unescape HTML entities before drawing
+      const unescaped = code.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+      
+      const isDarkMode = isDark();
+      // Add styling directives for colors, depending on theme
+      const themeDirectives = isDarkMode 
+        ? "#fill: #2d2d2d\n#stroke: #e0e0e0\n#fillArrows: true\n#zoom: 1.3\n#spacing: 40\n#padding: 15\n#bendSize: 0.3\n#arrowSize: 1\n"
+        : "#fill: #f4f6f8\n#stroke: #333333\n#fillArrows: true\n#zoom: 1.3\n#spacing: 40\n#padding: 15\n#bendSize: 0.3\n#arrowSize: 1\n";
+      
+      const fullCode = themeDirectives + unescaped;
+      
+      const canvas = document.createElement('canvas');
+      canvas.style.maxWidth = "100%";
+      canvas.style.borderRadius = "8px";
+      
+      window.nomnoml.draw(canvas, fullCode);
+      
+      node.innerHTML = '';
+      node.appendChild(canvas);
+      node.classList.remove('nomnoml');
+      node.setAttribute('data-processed', 'true');
+    } catch (err) {
+      console.warn('[LCA] Nomnoml parse error, falling back to raw code:', err);
+      node.classList.remove('nomnoml');
+      node.setAttribute('data-processed', 'true');
+      node.innerHTML = `<pre style="background:var(--lca-bg-tertiary);padding:1em;border-radius:6px;overflow-x:auto;"><code style="font-family:monospace;font-size:13px;white-space:pre;">${node.textContent}</code></pre>`;
+    }
   }
 }
 
@@ -136,11 +182,8 @@ function syncObserver() {
   }
 }
 
-syncObserver();
-patchHistory();
-
 // Listen to storage changes for hot-swapping styles dynamically
-chrome.storage.onChanged.addListener((changes, namespace) => {
+function handleStorageChanges(changes, namespace) {
   if (namespace === 'local' && changes.updateAvailable) {
     if (changes.updateAvailable.newValue) {
       showUpdateBanner(changes.updateAvailable.newValue);
@@ -192,7 +235,11 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
       }
     }
   }
-});
+}
+
+syncObserver();
+patchHistory();
+chrome.storage.onChanged.addListener(handleStorageChanges);
 
 function patchHistory() {
   ['pushState','replaceState'].forEach(fn => {
@@ -404,15 +451,12 @@ function findRuntimeRow() {
 // Finds the Code section container — real selector from DOM inspection
 // The code header is div.flex.items-center.justify-between.pb-2 (w=668, h=28)
 // We want its PARENT which wraps the entire code block
-function findCodeSection() {
-  const langs = ['Python3','Python','Java','C++','JavaScript','TypeScript','Go','Rust','Swift','Kotlin','C#','Ruby'];
-  // Strategy 1: find the code header row, then get its parent container
+function findCodeByHeader(langs) {
   for (const sel of ['div.flex.items-center.justify-between.pb-2', 'div.flex.items-center.justify-between']) {
     for (const el of document.querySelectorAll(sel)) {
       if (!langs.some(l => el.textContent.includes(l))) continue;
       const r = el.getBoundingClientRect();
       if (r.width > 200 && r.height < 60) {
-        // Walk up to find the wrapping card container
         let p = el;
         for (let i = 0; i < 4; i++) {
           p = p.parentElement;
@@ -420,11 +464,14 @@ function findCodeSection() {
           const pr = p.getBoundingClientRect();
           if (pr.width > 400 && pr.height > 100) return p;
         }
-        return el; // fallback to the row itself
+        return el; 
       }
     }
   }
-  // Strategy 2: find a language tab node and walk up
+  return null;
+}
+
+function findCodeByTab(langs) {
   for (const lang of langs) {
     const n = findExactText(lang);
     if (!n) continue;
@@ -437,6 +484,11 @@ function findCodeSection() {
     }
   }
   return null;
+}
+
+function findCodeSection() {
+  const langs = ['Python3','Python','Java','C++','JavaScript','TypeScript','Go','Rust','Swift','Kotlin','C#','Ruby'];
+  return findCodeByHeader(langs) || findCodeByTab(langs);
 }
 
 // Finds the Notes/Comment section — real placeholder is "Type comment here..."
@@ -1525,65 +1577,68 @@ async function openSolutionsPanel() {
   }
 
   let renderTimeout = null;
-  window.orthexSolListener = (msg) => {
-    if (msg.type === 'ANALYZE_PASS1_DONE') {
-      generated[msg.solutionType] = {
-        type: msg.solutionType,
-        name: msg.solutionType,
-        timeComplexity: msg.timeComplexity,
-        spaceComplexity: msg.spaceComplexity,
-        code: msg.code,
-        stepByStep: ''
-      };
-      if (activeType === msg.solutionType) renderTabBody(msg.solutionType);
-      
-      // Re-enable tabs
-      const tabs = document.querySelectorAll('#lca-solutions-container .lca-graph-tab');
-      tabs.forEach(t => { t.disabled = false; t.style.opacity = ''; });
 
-      // Mark the step-by-step div as streaming so the blink cursor shows
+  const handlePass1Done = (msg) => {
+    generated[msg.solutionType] = {
+      type: msg.solutionType,
+      name: msg.solutionType,
+      timeComplexity: msg.timeComplexity,
+      spaceComplexity: msg.spaceComplexity,
+      code: msg.code,
+      stepByStep: ''
+    };
+    if (activeType === msg.solutionType) renderTabBody(msg.solutionType);
+    
+    const tabs = document.querySelectorAll('#lca-solutions-container .lca-graph-tab');
+    tabs.forEach(t => { t.disabled = false; t.style.opacity = ''; });
+
+    const contentDiv = document.getElementById('lca-sol-body')?.querySelector('.lca-step-by-step-approach');
+    if (contentDiv) {
+      contentDiv.classList.add('is-streaming');
+      contentDiv.innerHTML = '<p style="color:var(--lca-muted);font-size:13px;">Generating explanation…</p>';
+    }
+  };
+
+  const handleStreamChunk = (msg) => {
+    if (!generated[msg.solutionType]) return;
+    
+    generated[msg.solutionType].stepByStep += msg.chunk;
+    if (activeType !== msg.solutionType) return;
+    
+    if (!renderTimeout) {
+      renderTimeout = setTimeout(() => {
+        const contentDiv = document.getElementById('lca-sol-body')?.querySelector('.lca-step-by-step-approach');
+        if (contentDiv) {
+          contentDiv.innerHTML = renderMarkdown(generated[msg.solutionType].stepByStep);
+          contentDiv.classList.add('is-streaming');
+        }
+        renderTimeout = null;
+      }, 80);
+    }
+  };
+
+  const handleStreamDone = (msg) => {
+    if (renderTimeout) { clearTimeout(renderTimeout); renderTimeout = null; }
+    if (!generated[msg.solutionType]) return;
+    
+    const solCacheKey = getSolCacheKey(problemTitle, language, msg.solutionType);
+    saveToCache(solCacheKey, generated[msg.solutionType]);
+    
+    if (activeType === msg.solutionType) {
       const contentDiv = document.getElementById('lca-sol-body')?.querySelector('.lca-step-by-step-approach');
       if (contentDiv) {
-        contentDiv.classList.add('is-streaming');
-        contentDiv.innerHTML = '<p style="color:var(--lca-muted);font-size:13px;">Generating explanation…</p>';
+        contentDiv.classList.remove('is-streaming');
+        contentDiv.innerHTML = renderMarkdown(generated[msg.solutionType].stepByStep);
       }
-    } else if (msg.type === 'ANALYZE_STREAM_CHUNK') {
-      if (generated[msg.solutionType]) {
-        generated[msg.solutionType].stepByStep += msg.chunk;
-        if (activeType === msg.solutionType) {
-          // During streaming, do a lightweight debounced render (partial markdown)
-          if (!renderTimeout) {
-            renderTimeout = setTimeout(() => {
-              const contentDiv = document.getElementById('lca-sol-body')?.querySelector('.lca-step-by-step-approach');
-              if (contentDiv) {
-                contentDiv.innerHTML = renderMarkdown(generated[msg.solutionType].stepByStep);
-                contentDiv.classList.add('is-streaming');
-              }
-              renderTimeout = null;
-            }, 80);
-          }
-        }
-      }
-    } else if (msg.type === 'ANALYZE_STREAM_DONE') {
-      if (renderTimeout) { clearTimeout(renderTimeout); renderTimeout = null; }
-      // Store full text regardless of active tab so switching tabs shows it
-      if (generated[msg.solutionType]) {
-        // Save to persistent cache so next panel open is instant
-        const solCacheKey = getSolCacheKey(problemTitle, language, msg.solutionType);
-        saveToCache(solCacheKey, generated[msg.solutionType]);
-        // If the tab is active, render now; otherwise it will render when user switches
-        if (activeType === msg.solutionType) {
-          const contentDiv = document.getElementById('lca-sol-body')?.querySelector('.lca-step-by-step-approach');
-          if (contentDiv) {
-            contentDiv.classList.remove('is-streaming');
-            contentDiv.innerHTML = renderMarkdown(generated[msg.solutionType].stepByStep);
-          }
-          if (window.mermaid) {
-            renderMermaidDiagrams(contentDiv);
-          }
-        }
-      }
+      if (window.mermaid) renderMermaidDiagrams(contentDiv);
+      if (window.nomnoml) renderNomnomlDiagrams(contentDiv);
     }
+  };
+
+  window.orthexSolListener = (msg) => {
+    if (msg.type === 'ANALYZE_PASS1_DONE') handlePass1Done(msg);
+    else if (msg.type === 'ANALYZE_STREAM_CHUNK') handleStreamChunk(msg);
+    else if (msg.type === 'ANALYZE_STREAM_DONE') handleStreamDone(msg);
   };
   chrome.runtime.onMessage.addListener(window.orthexSolListener);
 
@@ -1620,6 +1675,10 @@ async function openSolutionsPanel() {
         const clean = sanitizeMermaidSource(text);
         const escaped = clean.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         return `<div class="mermaid">${escaped}</div>`;
+      }
+      if (lang === 'nomnoml') {
+        const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return `<div class="nomnoml">${escaped}</div>`;
       }
       const unescapedCode = text.replace(/&lt;/g, '<').replace(/&gt;/g, '>').trim();
       return `<div class="lca-note lca-code-block" style="border:1px solid var(--lca-primary-border);border-radius:6px;padding:12px 14px;position:relative;overflow:hidden;background:rgba(0,0,0,0.02);margin:12px 0;"><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:12.5px;overflow-x:auto;color:var(--lca-ink);padding-top:4px;line-height:1.5;">${highlightSyntax ? highlightSyntax(unescapedCode) : unescapedCode}</pre></div>`;
@@ -1711,7 +1770,10 @@ async function openSolutionsPanel() {
     if (window.mermaid) {
       setTimeout(() => {
         const scope = bodyEl.querySelector('.lca-step-by-step-approach');
-        if (scope) renderMermaidDiagrams(scope);
+        if (scope) {
+          renderMermaidDiagrams(scope);
+          renderNomnomlDiagrams(scope);
+        }
       }, 50); // slight delay for DOM insertion
     }
   }

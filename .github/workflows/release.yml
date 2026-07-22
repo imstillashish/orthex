@@ -1,0 +1,66 @@
+name: Build and Release CRX
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Prepare Distribution Directory
+        run: |
+          mkdir -p dist
+          # Copy only extension files, excluding .git, .github, workflows, etc.
+          cp -r assets background lib popup scripts styles manifest.json updates.xml dist/
+          
+      - name: Build CRX
+        env:
+          EXTENSION_KEY: ${{ secrets.EXTENSION_KEY }}
+        run: |
+          if [ -z "$EXTENSION_KEY" ]; then
+            echo "Error: EXTENSION_KEY secret is missing!"
+            exit 1
+          fi
+          
+          # Write the private key to a file
+          echo "$EXTENSION_KEY" > key.pem
+          
+          # Pack the extension using crx3
+          npx crx3 -p key.pem -o orthex.crx dist/
+          
+          # Remove the key for security
+          rm key.pem
+
+      - name: Upload CRX to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: orthex.crx
+
+      - name: Update updates.xml
+        run: |
+          # Extract version from the GitHub tag (e.g., 'v1.1.2' -> '1.1.2')
+          VERSION=${GITHUB_REF_NAME#v}
+          
+          # Update version and codebase URL in updates.xml
+          sed -i -E "s/version='[^']+'/version='$VERSION'/g" updates.xml
+          sed -i -E "s|codebase='[^']+'|codebase='https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/orthex.crx'|g" updates.xml
+          
+          # Commit the updated XML directly to the main branch
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add updates.xml
+          git commit -m "chore: bump updates.xml for release ${GITHUB_REF_NAME} [skip ci]" || echo "No changes to commit"
+          git push origin HEAD:main

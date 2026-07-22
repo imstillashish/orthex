@@ -5,15 +5,15 @@
 // Powered by Groq using openai/gpt-oss-120b (BYOK model)
 // ============================================================
 
-const GROQ_API_URL       = 'https://api.groq.com/openai/v1/chat/completions';
-const GROQ_MODEL         = 'openai/gpt-oss-120b';
-const GROQ_BASE          = 'https://api.groq.com/openai/v1';
+const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
+const GROQ_MODEL = "llama-3.3-70b-versatile";
+const GROQ_BASE = "https://api.groq.com/openai/v1";
 
 // Helper: get the stored Groq API key
 async function getGroqKey() {
   return new Promise((resolve) => {
-    chrome.storage.sync.get(['groqApiKey'], (result) => {
-      resolve(result.groqApiKey || '');
+    chrome.storage.sync.get(["groqApiKey"], (result) => {
+      resolve(result.groqApiKey || "");
     });
   });
 }
@@ -21,82 +21,88 @@ async function getGroqKey() {
 // ── Sequential API Queue ──────────────────────────────────
 let apiQueue = Promise.resolve();
 
-
-
-
-
-
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log('[LCA] Message received:', message.type);
+  console.log("[LCA] Message received:", message.type);
 
-  if (message.type === 'ANALYZE_FULL') {
+  if (message.type === "ANALYZE_FULL") {
     (async () => {
       try {
-        console.log('[LCA] Running full analysis...');
+        console.log("[LCA] Running full analysis...");
         const fullResult = await handleFullAnalysis(message.payload);
 
         sendResponse({ success: true, data: fullResult });
       } catch (err) {
         console.error(`[LCA] ANALYZE_FULL failed:`, err);
-        sendResponse({ success: false, error: err.message || 'Unknown error' });
+        sendResponse({ success: false, error: err.message || "Unknown error" });
       }
     })();
     return true;
   }
 
-  if (message.type === 'GENERATE_SOLUTIONS') {
-    (async () => {
+  // Helper to wrap generation handlers
+  const wrapGenerationHandler = (type, handlerFn) => {
+    return async (payload, tabId, sendResponse) => {
       try {
-        console.log('[LCA] Running solutions generation...');
-        const result = await handleGenerateSolutions(message.payload, sender.tab?.id);
+        console.log(`[LCA] Running ${type}...`);
+        const result = await handlerFn(payload, tabId);
         sendResponse({ success: true, data: result });
       } catch (err) {
-        console.error(`[LCA] GENERATE_SOLUTIONS failed:`, err);
-        sendResponse({ success: false, error: err.message || 'Unknown error' });
+        console.error(`[LCA] ${type} failed:`, err);
+        sendResponse({ success: false, error: err.message || "Unknown error" });
       }
-    })();
+    };
+  };
+
+  if (message.type === "GENERATE_SOLUTIONS") {
+    wrapGenerationHandler("solutions generation", handleGenerateSolutions)(
+      message.payload,
+      sender.tab?.id,
+      sendResponse,
+    );
     return true;
   }
 
-  if (message.type === 'GENERATE_SINGLE_SOLUTION') {
-    (async () => {
-      try {
-        console.log('[LCA] Running single solution generation for:', message.payload.solutionType);
-        const result = await handleGenerateSingleSolution(message.payload, sender.tab?.id);
-        sendResponse({ success: true, data: result });
-      } catch (err) {
-        console.error(`[LCA] GENERATE_SINGLE_SOLUTION failed:`, err);
-        sendResponse({ success: false, error: err.message || 'Unknown error' });
-      }
-    })();
+  if (message.type === "GENERATE_SINGLE_SOLUTION") {
+    wrapGenerationHandler(
+      `single solution generation for: ${message.payload.solutionType}`,
+      handleGenerateSingleSolution,
+    )(message.payload, sender.tab?.id, sendResponse);
     return true;
   }
 
-  if (message.type === 'CHECK_API_KEY') {
-    getGroqKey().then(key => {
+  if (message.type === "CHECK_API_KEY") {
+    getGroqKey().then((key) => {
       sendResponse({ hasKey: !!key });
     });
     return true;
   }
 
-
-  if (message.type === 'CHECK_FOR_UPDATES_MANUAL') {
+  if (message.type === "CHECK_FOR_UPDATES_MANUAL") {
     checkForUpdates(true)
       .then((data) => sendResponse({ success: true, update: data }))
       .catch((err) => sendResponse({ success: false, error: err.message }));
     return true;
   }
 
-  if (message.type === 'GET_SETTINGS') {
-    chrome.storage.sync.get(['groqApiKey', 'autoAnalyze', 'analyzeOnWrongAnswer', 'analyzeOnTLE', 'uiStyle'], (result) => {
-      sendResponse({
-        hasKey: !!result.groqApiKey,
-        autoAnalyze: result.autoAnalyze !== false,
-        analyzeOnWrongAnswer: result.analyzeOnWrongAnswer !== false,
-        analyzeOnTLE: result.analyzeOnTLE !== false,
-        uiStyle: result.uiStyle || 'classic'
-      });
-    });
+  if (message.type === "GET_SETTINGS") {
+    chrome.storage.sync.get(
+      [
+        "groqApiKey",
+        "autoAnalyze",
+        "analyzeOnWrongAnswer",
+        "analyzeOnTLE",
+        "uiStyle",
+      ],
+      (result) => {
+        sendResponse({
+          hasKey: !!result.groqApiKey,
+          autoAnalyze: result.autoAnalyze !== false,
+          analyzeOnWrongAnswer: result.analyzeOnWrongAnswer !== false,
+          analyzeOnTLE: result.analyzeOnTLE !== false,
+          uiStyle: result.uiStyle || "classic",
+        });
+      },
+    );
     return true;
   }
 });
@@ -104,37 +110,44 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 // ── Shared context builder ────────────────────────────────
 function buildContext(data) {
   const {
-    problemTitle, language, verdict, runtime, runtimeBeat,
-    memory, memoryBeat, code, difficulty,
+    problemTitle,
+    language,
+    verdict,
+    runtime,
+    runtimeBeat,
+    memory,
+    memoryBeat,
+    code,
+    difficulty,
   } = data;
 
-  const verdictDesc = {
-    'Accepted': 'passed all test cases',
-    'Wrong Answer': 'produced incorrect output',
-    'Time Limit Exceeded': 'exceeded the time limit',
-    'Memory Limit Exceeded': 'used too much memory',
-    'Runtime Error': 'threw a runtime exception',
-    'Compile Error': 'failed to compile',
-  }[verdict] || verdict;
+  const verdictDesc =
+    {
+      Accepted: "passed all test cases",
+      "Wrong Answer": "produced incorrect output",
+      "Time Limit Exceeded": "exceeded the time limit",
+      "Memory Limit Exceeded": "used too much memory",
+      "Runtime Error": "threw a runtime exception",
+      "Compile Error": "failed to compile",
+    }[verdict] || verdict;
 
   const hasCode = code && code.trim().length > 10;
   const codeTruncated = hasCode && code.length > 2000;
   const codeBlock = hasCode
-    ? `\n\nCODE (${language}):\n\`\`\`\n${code.slice(0, 2000)}${codeTruncated ? '\n... [truncated — showing first 2000 chars]' : ''}\n\`\`\``
-    : '\n\n(Code unavailable — analyze from stats only)';
+    ? `\n\nCODE (${language}):\n\`\`\`\n${code.slice(0, 2000)}${codeTruncated ? "\n... [truncated — showing first 2000 chars]" : ""}\n\`\`\``
+    : "\n\n(Code unavailable — analyze from stats only)";
 
-  return `PROBLEM: "${problemTitle}" (${difficulty || 'Unknown'})
+  return `PROBLEM: "${problemTitle}" (${difficulty || "Unknown"})
 VERDICT: ${verdict} — ${verdictDesc}
 LANGUAGE: ${language}
-RUNTIME: ${runtime || 'N/A'}${runtimeBeat ? ` (Beats ${runtimeBeat})` : ''}
-MEMORY: ${memory || 'N/A'}${memoryBeat ? ` (Beats ${memoryBeat})` : ''}${codeBlock}`;
+RUNTIME: ${runtime || "N/A"}${runtimeBeat ? ` (Beats ${runtimeBeat})` : ""}
+MEMORY: ${memory || "N/A"}${memoryBeat ? ` (Beats ${memoryBeat})` : ""}${codeBlock}`;
 }
-
-
 
 // cyrb53 hash function: fast, non-cryptographic 53-bit hash
 function cyrb53(str, seed = 0) {
-  let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
+  let h1 = 0xdeadbeef ^ seed,
+    h2 = 0x41c6ce57 ^ seed;
   for (let i = 0, ch; i < str.length; i++) {
     ch = str.charCodeAt(i);
     h1 = Math.imul(h1 ^ ch, 2654435761);
@@ -152,7 +165,7 @@ async function getCache(key) {
   return new Promise((resolve) => {
     chrome.storage.local.get([key], (result) => {
       if (chrome.runtime.lastError) {
-        console.warn('[LCA] Cache read error:', chrome.runtime.lastError);
+        console.warn("[LCA] Cache read error:", chrome.runtime.lastError);
         resolve(null);
       } else {
         resolve(result[key] || null);
@@ -165,23 +178,22 @@ async function setCache(key, value) {
   return new Promise((resolve) => {
     chrome.storage.local.set({ [key]: value }, () => {
       if (chrome.runtime.lastError) {
-        console.warn('[LCA] Cache write error:', chrome.runtime.lastError);
+        console.warn("[LCA] Cache write error:", chrome.runtime.lastError);
       }
       resolve();
     });
   });
 }
 
-
 async function handleFullAnalysis(data) {
   if (!data || !data.problemTitle || !data.code || !data.language) {
-    throw new Error('Invalid analysis payload: missing required fields');
+    throw new Error("Invalid analysis payload: missing required fields");
   }
 
   const cacheKey = `analysis_${cyrb53(data.problemTitle + data.language + data.code + data.verdict)}`;
   const cached = await getCache(cacheKey);
   if (cached) {
-    console.log('[LCA] Cache hit for FULL_ANALYSIS');
+    console.log("[LCA] Cache hit for FULL_ANALYSIS");
     return cached;
   }
 
@@ -225,36 +237,39 @@ Rules:
 - Be extremely concise.`;
 
   const raw = await callGroqWithRetry(prompt, 1200);
-  const parsed = parseSection(raw, ['approach', 'efficiency', 'codeStyle']);
-  
+  const parsed = parseSection(raw, ["approach", "efficiency", "codeStyle"]);
+
   await setCache(cacheKey, parsed);
   return parsed;
 }
 
-
-
 // ── callGroq with Retry & Exponential Backoff ───────────
-async function callGroqWithRetry(prompt, maxTokens = 800, retries = 3, model = GROQ_MODEL) {
+async function callGroqWithRetry(
+  prompt,
+  maxTokens = 800,
+  retries = 3,
+  model = GROQ_MODEL,
+) {
   let lastErr;
   for (let i = 0; i < retries; i++) {
     try {
       // Exponential backoff: 0s, 2s, 4s, 8s, 16s + jitter
-      const wait = i === 0 ? 0 : (Math.pow(2, i) * 1000) + (Math.random() * 1000);
-      if (wait > 0) await new Promise(r => setTimeout(r, wait));
+      const wait = i === 0 ? 0 : Math.pow(2, i) * 1000 + Math.random() * 1000;
+      if (wait > 0) await new Promise((r) => setTimeout(r, wait));
 
       const res = await callGroq(prompt, maxTokens, model);
 
       // Extract content from response structure
       const content = res?.choices?.[0]?.message?.content;
       if (!content || content.trim().length < 2) {
-        throw new Error('EMPTY_RESPONSE');
+        throw new Error("EMPTY_RESPONSE");
       }
 
       return res;
     } catch (err) {
       lastErr = err;
       console.warn(`[LCA] Retry ${i + 1}/${retries} after error:`, err.message);
-      if (err.message === 'INVALID_API_KEY') throw err;
+      if (err.message === "INVALID_API_KEY") throw err;
     }
   }
   throw lastErr;
@@ -263,7 +278,7 @@ async function callGroqWithRetry(prompt, maxTokens = 800, retries = 3, model = G
 // ── Base Groq API Call ────────────────────────────
 async function callGroq(prompt, maxTokens = 800, model = GROQ_MODEL) {
   const apiKey = await getGroqKey();
-  if (!apiKey) throw new Error('INVALID_API_KEY');
+  if (!apiKey) throw new Error("INVALID_API_KEY");
 
   const url = `${GROQ_BASE}/chat/completions`;
   const body = {
@@ -271,16 +286,16 @@ async function callGroq(prompt, maxTokens = 800, model = GROQ_MODEL) {
     messages: [{ role: "user", content: prompt }],
     temperature: 0.2,
     max_tokens: maxTokens,
-    stream: false
+    stream: false,
   };
 
   const response = await fetch(url, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
     },
-    body: JSON.stringify(body)
+    body: JSON.stringify(body),
   });
 
   if (!response.ok) {
@@ -291,9 +306,15 @@ async function callGroq(prompt, maxTokens = 800, model = GROQ_MODEL) {
 }
 
 // ── Streaming Groq API Call ───────────────────────────
-async function callGroqStreaming(prompt, maxTokens = 800, model = GROQ_MODEL, tabId, solutionType) {
+async function callGroqStreaming(
+  prompt,
+  maxTokens = 800,
+  model = GROQ_MODEL,
+  tabId,
+  solutionType,
+) {
   const apiKey = await getGroqKey();
-  if (!apiKey) throw new Error('INVALID_API_KEY');
+  if (!apiKey) throw new Error("INVALID_API_KEY");
 
   const controller = new AbortController();
   const timeoutMs = 120000; // 120 seconds max timeout for full generation
@@ -305,39 +326,55 @@ async function callGroqStreaming(prompt, maxTokens = 800, model = GROQ_MODEL, ta
     messages: [{ role: "user", content: prompt }],
     temperature: 0.2,
     max_tokens: maxTokens,
-    stream: true
+    stream: true,
   };
 
   try {
     let response;
     let attempt = 0;
-    const maxRetries = 3;
+    const maxRetries = 6; // Increased retries for rate limits
 
     while (attempt <= maxRetries) {
       try {
         response = await fetch(url, {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`,
           },
           body: JSON.stringify(body),
-          signal: controller.signal
+          signal: controller.signal,
         });
 
         if (response.status === 429 && attempt < maxRetries) {
           attempt++;
-          console.warn(`[LCA] Streaming rate limit hit (429). Retrying in ${attempt * 2}s...`);
-          await new Promise(r => setTimeout(r, attempt * 2000));
+          let waitMs = Math.pow(2, attempt) * 1000 + Math.random() * 1000; // Exponential backoff + jitter
+
+          const retryAfter = response.headers.get("retry-after");
+          if (retryAfter) {
+            const parsed = parseFloat(retryAfter);
+            if (!isNaN(parsed) && parsed > 0) {
+              waitMs = parsed * 1000 + Math.random() * 500; // Respect header + tiny jitter
+            }
+          }
+
+          console.warn(
+            `[LCA] Streaming rate limit hit (429). Retrying in ${(waitMs / 1000).toFixed(1)}s (Attempt ${attempt}/${maxRetries})...`,
+          );
+          await new Promise((r) => setTimeout(r, waitMs));
           continue;
         }
-        
+
         break;
       } catch (fetchErr) {
-        if (fetchErr.name === 'AbortError') throw fetchErr;
+        if (fetchErr.name === "AbortError") throw fetchErr;
         if (attempt < maxRetries) {
           attempt++;
-          await new Promise(r => setTimeout(r, attempt * 2000));
+          const waitMs = Math.pow(2, attempt) * 1000 + Math.random() * 1000;
+          console.warn(
+            `[LCA] Streaming fetch error. Retrying in ${(waitMs / 1000).toFixed(1)}s (Attempt ${attempt}/${maxRetries})...`,
+          );
+          await new Promise((r) => setTimeout(r, waitMs));
           continue;
         }
         throw fetchErr;
@@ -350,9 +387,9 @@ async function callGroqStreaming(prompt, maxTokens = 800, model = GROQ_MODEL, ta
     }
 
     const reader = response.body.getReader();
-    const decoder = new TextDecoder('utf-8');
-    let fullText = '';
-    let buffer = '';
+    const decoder = new TextDecoder("utf-8");
+    let fullText = "";
+    let buffer = "";
 
     while (true) {
       // Reset timeout on each chunk received so slow streams don't die prematurely
@@ -362,115 +399,122 @@ async function callGroqStreaming(prompt, maxTokens = 800, model = GROQ_MODEL, ta
       const { done, value } = await reader.read();
       if (done) break;
       buffer += decoder.decode(value, { stream: true });
-      
-      const lines = buffer.split('\n');
+
+      const lines = buffer.split("\n");
       buffer = lines.pop(); // Keep incomplete line
 
       for (const line of lines) {
-        const trimmed = line.trim();
-        if (trimmed.startsWith('data: ') && trimmed !== 'data: [DONE]') {
-          try {
-            const data = JSON.parse(trimmed.slice(6));
-            const chunk = data.choices?.[0]?.delta?.content || '';
-            if (chunk) {
-              fullText += chunk;
-              if (tabId && solutionType) {
-                chrome.tabs.sendMessage(tabId, { type: 'ANALYZE_STREAM_CHUNK', solutionType, chunk });
-              }
-            }
-          } catch (e) {}
-        }
+        fullText += processSSEChunk(line, tabId, solutionType);
       }
     }
-    
+
     // Process any remaining buffer
     if (buffer.trim()) {
-      const trimmed = buffer.trim();
-      if (trimmed.startsWith('data: ') && trimmed !== 'data: [DONE]') {
-        try {
-          const data = JSON.parse(trimmed.slice(6));
-          const chunk = data.choices?.[0]?.delta?.content || '';
-          if (chunk) {
-            fullText += chunk;
-            if (tabId && solutionType) {
-              chrome.tabs.sendMessage(tabId, { type: 'ANALYZE_STREAM_CHUNK', solutionType, chunk });
-            }
-          }
-        } catch (e) {}
-      }
+      fullText += processSSEChunk(buffer, tabId, solutionType);
     }
-    
+
     clearTimeout(timeoutId);
-    
+
     // Notify stream complete
     if (tabId && solutionType) {
-      chrome.tabs.sendMessage(tabId, { type: 'ANALYZE_STREAM_DONE', solutionType });
+      chrome.tabs.sendMessage(tabId, {
+        type: "ANALYZE_STREAM_DONE",
+        solutionType,
+      });
     }
-    
+
     return fullText;
   } catch (err) {
     clearTimeout(timeoutId);
-    if (err.name === 'AbortError') throw new Error('TIMEOUT');
+    if (err.name === "AbortError") throw new Error("TIMEOUT");
     throw err;
   }
 }
 
 // ── Response Parser (Updated with Deep Repair) ───
+// ... wait, I need to insert processSSEChunk function itself.
+// I will insert it right above function parseSection
+function processSSEChunk(line, tabId, solutionType) {
+  const trimmed = line.trim();
+  if (trimmed.startsWith("data: ") && trimmed !== "data: [DONE]") {
+    try {
+      const data = JSON.parse(trimmed.slice(6));
+      const chunk = data.choices?.[0]?.delta?.content || "";
+      if (chunk && tabId && solutionType) {
+        chrome.tabs.sendMessage(tabId, {
+          type: "ANALYZE_STREAM_CHUNK",
+          solutionType,
+          chunk,
+        });
+      }
+      return chunk;
+    } catch (e) {}
+  }
+  return "";
+}
+
 function parseSection(data, requiredKeys) {
-  let text = '';
+  let text = "";
   try {
     text = data?.choices?.[0]?.message?.content;
 
     if (!text) {
-      throw new Error('Empty response from Groq');
+      throw new Error("Empty response from Groq");
     }
 
-    console.log('[LCA] Raw text (first 120):', text.slice(0, 120));
+    console.log("[LCA] Raw text (first 120):", text.slice(0, 120));
 
     // Strip potential markdown fences
     let cleaned = text.trim();
-    if (cleaned.startsWith('```')) {
+    if (cleaned.startsWith("```")) {
       const m = cleaned.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
       if (m) cleaned = m[1];
     }
 
     // Extract JSON block
-    const first = cleaned.indexOf('{');
-    const last = cleaned.lastIndexOf('}');
-    if (first !== -1 && last !== -1) cleaned = cleaned.substring(first, last + 1);
+    const first = cleaned.indexOf("{");
+    const last = cleaned.lastIndexOf("}");
+    if (first !== -1 && last !== -1)
+      cleaned = cleaned.substring(first, last + 1);
 
     // Deep JSON repair and parse
     let parsed;
     try {
       // 1. Remove trailing commas instead of comments (which break JSON code blocks)
-      let commentCleaned = cleaned.replace(/,\s*([\]}])/g, '$1');
+      let commentCleaned = cleaned.replace(/,\s*([\]}])/g, "$1");
       // 3. Escape bare control characters (literal newlines/tabs) inside JSON strings
       //    This is the most common cause of "Bad control character" errors when AI
       //    embeds real newlines in code fields instead of escaped \n sequences.
       commentCleaned = sanitizeControlChars(commentCleaned);
       parsed = JSON.parse(commentCleaned.trim());
     } catch (parseErr) {
-      console.warn('[LCA] Standard JSON parse failed, attempting deep repair...', parseErr.message);
+      console.warn(
+        "[LCA] Standard JSON parse failed, attempting deep repair...",
+        parseErr.message,
+      );
       try {
         const repaired = deepRepair(sanitizeControlChars(cleaned));
         parsed = JSON.parse(repaired);
       } catch (deepErr) {
-        console.error('[LCA] Deep repair failed:', deepErr.message);
+        console.error("[LCA] Deep repair failed:", deepErr.message);
         throw parseErr; // throw original parse error
       }
     }
 
-    const hasAny = requiredKeys.some(k => parsed[k] !== undefined);
-    if (!hasAny) throw new Error(`Missing fields: ${requiredKeys.join(', ')}`);
+    const hasAny = requiredKeys.some((k) => parsed[k] !== undefined);
+    if (!hasAny) throw new Error(`Missing fields: ${requiredKeys.join(", ")}`);
 
     return parsed;
   } catch (e) {
-    console.error('[LCA] Parse error detail:', e.message);
-    console.error('[LCA] Faulty text:', text);
+    console.error("[LCA] Parse error detail:", e.message);
+    console.error("[LCA] Faulty text:", text);
 
     // If it's a truncation error, provide a cleaner message
-    if (e.message.includes('Unterminated') || e.message.includes('Unexpected end')) {
-      throw new Error('Analysis truncated by AI — please Retry the section.');
+    if (
+      e.message.includes("Unterminated") ||
+      e.message.includes("Unexpected end")
+    ) {
+      throw new Error("Analysis truncated by AI — please Retry the section.");
     }
     throw new Error(`Parse failed: ${e.message}`);
   }
@@ -482,14 +526,14 @@ function parseSection(data, requiredKeys) {
 // This is the #1 cause of "Bad control character in string literal" errors when
 // an LLM embeds real whitespace in a "code" field instead of \\n / \\t sequences.
 function sanitizeControlChars(str) {
-  let result = '';
+  let result = "";
   let inString = false;
 
   for (let i = 0; i < str.length; i++) {
     const ch = str[i];
 
     // Track escape sequences — the char after a backslash is never structural
-    if (inString && ch === '\\') {
+    if (inString && ch === "\\") {
       result += ch;
       if (i + 1 < str.length) {
         result += str[i + 1];
@@ -510,13 +554,28 @@ function sanitizeControlChars(str) {
       const code = ch.charCodeAt(0);
       if (code < 0x20) {
         // Map common ones to their JSON escape equivalents
-        if (ch === '\n')  { result += '\\n';  continue; }
-        if (ch === '\r')  { result += '\\r';  continue; }
-        if (ch === '\t')  { result += '\\t';  continue; }
-        if (ch === '\b')  { result += '\\b';  continue; }
-        if (ch === '\f')  { result += '\\f';  continue; }
+        if (ch === "\n") {
+          result += "\\n";
+          continue;
+        }
+        if (ch === "\r") {
+          result += "\\r";
+          continue;
+        }
+        if (ch === "\t") {
+          result += "\\t";
+          continue;
+        }
+        if (ch === "\b") {
+          result += "\\b";
+          continue;
+        }
+        if (ch === "\f") {
+          result += "\\f";
+          continue;
+        }
         // All other control characters: use unicode escape
-        result += '\\u' + code.toString(16).padStart(4, '0');
+        result += "\\u" + code.toString(16).padStart(4, "0");
         continue;
       }
     }
@@ -528,15 +587,15 @@ function sanitizeControlChars(str) {
 
 // ── Deep JSON Heuristic Repair (Inner Quote Easing & Truncation Fixing) ──
 function deepRepair(str) {
-  let result = '';
+  let result = "";
   let inString = false;
 
   for (let i = 0; i < str.length; i++) {
     const char = str[i];
 
     // If it's a backslash, keep it and the next char verbatim
-    if (char === '\\') {
-      result += '\\';
+    if (char === "\\") {
+      result += "\\";
       if (i + 1 < str.length) {
         result += str[i + 1];
         i++;
@@ -547,7 +606,7 @@ function deepRepair(str) {
     if (char === '"') {
       // Look ahead to check if this quote is structural
       let isStructural = false;
-      let nextNonWs = '';
+      let nextNonWs = "";
       for (let j = i + 1; j < str.length; j++) {
         if (!/\s/.test(str[j])) {
           nextNonWs = str[j];
@@ -560,7 +619,7 @@ function deepRepair(str) {
       // - ',' (end of a value in list)
       // - '}' or ']' (end of object or array)
       // Or, if we are NOT currently in a string, the opening quote is always structural!
-      if (!inString || [':', ',', '}', ']'].includes(nextNonWs)) {
+      if (!inString || [":", ",", "}", "]"].includes(nextNonWs)) {
         isStructural = true;
       }
 
@@ -591,7 +650,7 @@ function autoCloseJSON(str) {
       escaped = false;
       continue;
     }
-    if (char === '\\') {
+    if (char === "\\") {
       escaped = true;
       continue;
     }
@@ -600,9 +659,9 @@ function autoCloseJSON(str) {
       continue;
     }
     if (!inString) {
-      if (char === '{' || char === '[') {
-        stack.push(char === '{' ? '}' : ']');
-      } else if (char === '}' || char === ']') {
+      if (char === "{" || char === "[") {
+        stack.push(char === "{" ? "}" : "]");
+      } else if (char === "}" || char === "]") {
         if (stack.length > 0 && stack[stack.length - 1] === char) {
           stack.pop();
         }
@@ -621,7 +680,8 @@ function autoCloseJSON(str) {
 }
 
 async function handleGenerateSolutions(data, tabId) {
-  if (!data || !data.problemTitle || !data.language) throw new Error('Invalid payload');
+  if (!data || !data.problemTitle || !data.language)
+    throw new Error("Invalid payload");
   const { problemTitle, difficulty, language, description, defaultCode } = data;
 
   // ── PASS 1: Generate all solutions (code + complexity only) ──────────────────
@@ -637,10 +697,10 @@ Difficulty: "${difficulty}"
 Language: "${language}"
 
 PROBLEM DESCRIPTION:
-${description || 'Description not extracted.'}
+${description || "Description not extracted."}
 
 DEFAULT CODE BOILERPLATE:
-${defaultCode || 'Not provided. Use standard boilerplate.'}
+${defaultCode || "Not provided. Use standard boilerplate."}
 
 IMPORTANT: Always generate at least 2 solutions (The Intern Approach + Staff Architect Approach). Generate 3 if a distinct L5 Engineer Approach exists.
 
@@ -675,15 +735,19 @@ Rules:
 8. Each solution must use a clearly different algorithmic approach.
 9. CORRECTNESS IS CRITICAL: Double-check logic, array bounds, base cases, and off-by-one errors. Perform a mental dry-run to ensure it perfectly solves the problem.`;
 
-  console.log('[LCA] Solutions Pass 1: generating code...');
+  console.log("[LCA] Solutions Pass 1: generating code...");
   const pass1Raw = await callGroqWithRetry(pass1Prompt, 2500, 5, GROQ_MODEL);
-  const pass1Result = parseSection(pass1Raw, ['solutions']);
+  const pass1Result = parseSection(pass1Raw, ["solutions"]);
   const solutions = pass1Result.solutions || [];
 
-  if (solutions.length === 0) throw new Error('No solutions returned in Pass 1.');
+  if (solutions.length === 0)
+    throw new Error("No solutions returned in Pass 1.");
 
   if (tabId) {
-    chrome.tabs.sendMessage(tabId, { type: 'ANALYZE_PASS1_DONE_ALL', solutions });
+    chrome.tabs.sendMessage(tabId, {
+      type: "ANALYZE_PASS1_DONE_ALL",
+      solutions,
+    });
   }
 
   // ── PASS 2: Generate stepByStep markdown for each solution individually ───────
@@ -709,7 +773,7 @@ Write ONLY the markdown text (NOT JSON). Follow this exact structure:
    - DO NOT write any block of code (\`\`\` code fences). You may only use inline code snippets.
 5. Then another horizontal divider: ---
 6. Then a section: ## Visual Example: Tracing the Code
-7. Create a beautiful, colorful top-to-bottom Mermaid flowchart (\`\`\`mermaid\\ngraph TD\\n...\\n\`\`\`) to visualize the core algorithm. IMPORTANT: We are using Mermaid version 11.15.0. Ensure the syntax is strictly compatible with Mermaid v11.15.0. You MUST enclose all node labels in double quotes (e.g., A["Step 1 (Init)"]). Do NOT use unescaped special characters.
+7. Create a beautiful, top-to-bottom Nomnoml flowchart (\`\`\`nomnoml\\n[Start] -> [End]\\n...\\n\`\`\`) to visualize the core algorithm. IMPORTANT: You MUST use Nomnoml syntax, which uses square brackets for nodes and -> for arrows. It is highly forgiving. You MUST accurately represent loops, while-loops, and conditional branches in the algorithm by creating cyclic arrows (e.g., \`[Check Condition] -> [Process]\\n[Process] -> [Check Condition]\`). Do not just make a flat sequential list!
 8. Trace the code with 2 example inputs (Trace A: a valid/passing input, Trace B: an edge/failing input). Show step-by-step variable changes.
 
 Additional rules:
@@ -719,15 +783,31 @@ Additional rules:
 
     console.log(`[LCA] Solutions Pass 2: stepByStep for ${sol.type}...`);
     try {
-      const fullText = await callGroqStreaming(pass2Prompt, 4000, GROQ_MODEL, tabId, sol.type);
+      const fullText = await callGroqStreaming(
+        pass2Prompt,
+        4000,
+        GROQ_MODEL,
+        tabId,
+        sol.type,
+      );
       solutions[i].stepByStep = fullText.trim();
     } catch (err) {
-      console.warn(`[LCA] Pass 2 stepByStep failed for ${sol.type}:`, err.message);
+      console.warn(
+        `[LCA] Pass 2 stepByStep failed for ${sol.type}:`,
+        err.message,
+      );
       const errMsg = `\n\n**Step-by-step breakdown could not be generated.** (Error: ${err.message}) Please regenerate.`;
       solutions[i].stepByStep += errMsg;
       if (tabId) {
-        chrome.tabs.sendMessage(tabId, { type: 'ANALYZE_STREAM_CHUNK', solutionType: sol.type, chunk: errMsg });
-        chrome.tabs.sendMessage(tabId, { type: 'ANALYZE_STREAM_DONE', solutionType: sol.type });
+        chrome.tabs.sendMessage(tabId, {
+          type: "ANALYZE_STREAM_CHUNK",
+          solutionType: sol.type,
+          chunk: errMsg,
+        });
+        chrome.tabs.sendMessage(tabId, {
+          type: "ANALYZE_STREAM_DONE",
+          solutionType: sol.type,
+        });
       }
     }
   }
@@ -740,7 +820,14 @@ Additional rules:
 // Generates exactly one solution type (e.g. 'The Intern Approach', 'L5 Engineer Approach', 'Staff Architect Approach')
 // and its step-by-step breakdown via two sequential API calls.
 async function handleGenerateSingleSolution(data, tabId) {
-  const { problemTitle, difficulty, language, description, defaultCode, solutionType } = data;
+  const {
+    problemTitle,
+    difficulty,
+    language,
+    description,
+    defaultCode,
+    solutionType,
+  } = data;
 
   // ── PASS 1: Generate the single solution (code + complexity) ──
   const pass1Prompt = `You are a world-class competitive programming coach.
@@ -756,10 +843,10 @@ Difficulty: "${difficulty}"
 Language: "${language}"
 
 PROBLEM DESCRIPTION:
-${description || 'Description not extracted.'}
+${description || "Description not extracted."}
 
 DEFAULT CODE BOILERPLATE:
-${defaultCode || 'Not provided. Use standard boilerplate.'}
+${defaultCode || "Not provided. Use standard boilerplate."}
 
 Return ONLY a single valid JSON object (not an array):
 {
@@ -780,21 +867,32 @@ Rules:
 7. Preserve proper indentation using spaces (2 or 4 depending on language convention). Do NOT collapse the code to a single line.
 8. CORRECTNESS IS CRITICAL: Double-check logic, array bounds, base cases, and off-by-one errors. Perform a mental dry-run to ensure it perfectly solves the problem.`;
 
-  console.log(`[LCA] Single Solution Pass 1: generating ${solutionType} code...`);
+  console.log(
+    `[LCA] Single Solution Pass 1: generating ${solutionType} code...`,
+  );
   const pass1Raw = await callGroqWithRetry(pass1Prompt, 2000, 5, GROQ_MODEL);
-  let sol = parseSection(pass1Raw, ['type', 'code', 'solutions']);
+  let sol = parseSection(pass1Raw, ["type", "code", "solutions"]);
   if (sol.solutions && Array.isArray(sol.solutions)) {
     sol = sol.solutions[0];
   } else if (Array.isArray(sol)) {
     sol = sol[0];
   }
   if (!sol || !sol.code) {
-    console.error(`[LCA] Invalid structure for ${solutionType}. Raw parsed:`, sol);
+    console.error(
+      `[LCA] Invalid structure for ${solutionType}. Raw parsed:`,
+      sol,
+    );
     throw new Error(`Failed to generate ${solutionType} solution code.`);
   }
 
   if (tabId) {
-    chrome.tabs.sendMessage(tabId, { type: 'ANALYZE_PASS1_DONE', solutionType, code: sol.code, timeComplexity: sol.timeComplexity, spaceComplexity: sol.spaceComplexity });
+    chrome.tabs.sendMessage(tabId, {
+      type: "ANALYZE_PASS1_DONE",
+      solutionType,
+      code: sol.code,
+      timeComplexity: sol.timeComplexity,
+      spaceComplexity: sol.spaceComplexity,
+    });
   }
 
   // ── PASS 2: Generate step-by-step markdown for this solution ──
@@ -818,7 +916,7 @@ Write ONLY the markdown text (NOT JSON). Follow this exact structure:
    - DO NOT write any block of code (\`\`\` code fences). You may only use inline code snippets.
 5. Then another horizontal divider: ---
 6. Then a section: ## Visual Example: Tracing the Code
-7. Create a beautiful, colorful top-to-bottom Mermaid flowchart (\`\`\`mermaid\\ngraph TD\\n...\\n\`\`\`) to visualize the core algorithm. IMPORTANT: We are using Mermaid version 11.15.0. Ensure the syntax is strictly compatible with Mermaid v11.15.0. You MUST enclose all node labels in double quotes (e.g., A["Step 1 (Init)"]). Do NOT use unescaped special characters.
+7. Create a beautiful, top-to-bottom Nomnoml flowchart (\`\`\`nomnoml\\n[Start] -> [End]\\n...\\n\`\`\`) to visualize the core algorithm. IMPORTANT: You MUST use Nomnoml syntax, which uses square brackets for nodes and -> for arrows. It is highly forgiving. You MUST accurately represent loops, while-loops, and conditional branches in the algorithm by creating cyclic arrows (e.g., \`[Check Condition] -> [Process]\\n[Process] -> [Check Condition]\`). Do not just make a flat sequential list!
 8. Trace the code with 2 example inputs (Trace A: a valid/passing input, Trace B: an edge/failing input). Show step-by-step variable changes.
 
 Additional rules:
@@ -828,15 +926,31 @@ Additional rules:
 
   console.log(`[LCA] Single Solution Pass 2: stepByStep for ${sol.type}...`);
   try {
-    const fullText = await callGroqStreaming(pass2Prompt, 4000, GROQ_MODEL, tabId, sol.type);
+    const fullText = await callGroqStreaming(
+      pass2Prompt,
+      4000,
+      GROQ_MODEL,
+      tabId,
+      sol.type,
+    );
     sol.stepByStep = fullText.trim();
   } catch (err) {
-    console.warn(`[LCA] Single Solution Pass 2 stepByStep failed:`, err.message);
+    console.warn(
+      `[LCA] Single Solution Pass 2 stepByStep failed:`,
+      err.message,
+    );
     const errMsg = `\n\n**Step-by-step breakdown could not be generated.** (Error: ${err.message}) Please try again.`;
     sol.stepByStep += errMsg;
     if (tabId) {
-      chrome.tabs.sendMessage(tabId, { type: 'ANALYZE_STREAM_CHUNK', solutionType: sol.type, chunk: errMsg });
-      chrome.tabs.sendMessage(tabId, { type: 'ANALYZE_STREAM_DONE', solutionType: sol.type });
+      chrome.tabs.sendMessage(tabId, {
+        type: "ANALYZE_STREAM_CHUNK",
+        solutionType: sol.type,
+        chunk: errMsg,
+      });
+      chrome.tabs.sendMessage(tabId, {
+        type: "ANALYZE_STREAM_DONE",
+        solutionType: sol.type,
+      });
     }
   }
 
@@ -848,22 +962,24 @@ Additional rules:
 
 async function checkForUpdates(manual = false) {
   try {
-    const response = await fetch('https://api.github.com/repos/imstillashish/orthex/releases/latest');
+    const response = await fetch(
+      "https://api.github.com/repos/imstillashish/orthex/releases/latest",
+    );
     if (!response.ok) throw new Error(`GitHub API error: ${response.status}`);
     const data = await response.json();
-    
-    const latestTag = data.tag_name || ''; // e.g. "v2.0.0" or "2.0.0"
-    const latestVersion = latestTag.replace(/^v/, '');
+
+    const latestTag = data.tag_name || ""; // e.g. "v2.0.0" or "2.0.0"
+    const latestVersion = latestTag.replace(/^v/, "");
     const currentVersion = chrome.runtime.getManifest().version;
-    
-    const currParts = currentVersion.split('.').map(Number);
-    const latParts = latestVersion.split('.').map(Number);
-    
+
+    const currParts = currentVersion.split(".").map(Number);
+    const latParts = latestVersion.split(".").map(Number);
+
     if (currParts.length < 3 || latParts.length < 3) return; // Invalid format
-    
+
     let isNewer = false;
     let isMajor = false;
-    
+
     if (latParts[0] > currParts[0]) {
       isNewer = true;
       isMajor = true;
@@ -874,47 +990,49 @@ async function checkForUpdates(manual = false) {
         isNewer = true;
       }
     }
-    
+
     // Check user preference
-    const { onlyMajorUpdates = true } = await chrome.storage.sync.get('onlyMajorUpdates');
-    
+    const { onlyMajorUpdates = true } =
+      await chrome.storage.sync.get("onlyMajorUpdates");
+
     if (isNewer && (!onlyMajorUpdates || isMajor)) {
       const updateData = {
         version: latestVersion,
         url: data.html_url,
-        isMajor
+        isMajor,
       };
-      
-      const { updateAvailable } = await chrome.storage.local.get('updateAvailable');
-      
+
+      const { updateAvailable } =
+        await chrome.storage.local.get("updateAvailable");
+
       await chrome.storage.local.set({ updateAvailable: updateData });
-      
+
       // If it's a new update we haven't notified about yet
       if (!updateAvailable || updateAvailable.version !== latestVersion) {
-        chrome.notifications.create('orthex-update', {
-          type: 'basic',
-          iconUrl: 'assets/icon-128.png',
-          title: 'Orthex Update Available',
+        chrome.notifications.create("orthex-update", {
+          type: "basic",
+          iconUrl: "assets/icon-128.png",
+          title: "Orthex Update Available",
           message: `Version ${latestVersion} is now available! Click to view release.`,
-          requireInteraction: true
+          requireInteraction: true,
         });
       }
       return updateData;
     } else {
       // Clear if up to date
-      await chrome.storage.local.remove('updateAvailable');
+      await chrome.storage.local.remove("updateAvailable");
       return null;
     }
   } catch (err) {
-    console.error('[LCA] Update check failed:', err);
+    console.error("[LCA] Update check failed:", err);
     throw err;
   }
 }
 
 // Notification click handler
 chrome.notifications.onClicked.addListener((notificationId) => {
-  if (notificationId === 'orthex-update') {
-    chrome.storage.local.get('updateAvailable', (data) => {
+  if (notificationId === "orthex-update") {
+    chrome.storage.local.get("updateAvailable", (data) => {
       if (data.updateAvailable && data.updateAvailable.url) {
         chrome.tabs.create({ url: data.updateAvailable.url });
       }
@@ -924,7 +1042,7 @@ chrome.notifications.onClicked.addListener((notificationId) => {
 
 // Setup alarm on install/startup
 chrome.runtime.onInstalled.addListener(() => {
-  chrome.alarms.create('check-for-updates', { periodInMinutes: 720 }); // Every 12 hours
+  chrome.alarms.create("check-for-updates", { periodInMinutes: 720 }); // Every 12 hours
   checkForUpdates();
 });
 
@@ -933,7 +1051,7 @@ chrome.runtime.onStartup.addListener(() => {
 });
 
 chrome.alarms.onAlarm.addListener((alarm) => {
-  if (alarm.name === 'check-for-updates') {
+  if (alarm.name === "check-for-updates") {
     checkForUpdates();
   }
 });

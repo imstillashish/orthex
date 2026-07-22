@@ -25,7 +25,7 @@
   "content_scripts": [
     {
       "matches": ["https://leetcode.com/*", "https://leetcode.cn/*"],
-      "js": ["lib/marked.min.js", "lib/mermaid.min.js", "scripts/extractor.js", "scripts/content.js"],
+      "js": ["lib/marked.min.js", "lib/graphre.js", "lib/nomnoml.js", "lib/mermaid.min.js", "scripts/extractor.js", "scripts/content.js"],
       "css": ["styles/main.css", "styles/panel.css"],
       "run_at": "document_idle"
     }
@@ -36,7 +36,8 @@
     "activeTab",
     "scripting",
     "tabs",
-    "alarms"
+    "alarms",
+    "notifications"
   ],
   "host_permissions": [
     "https://leetcode.com/*",
