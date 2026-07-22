@@ -18,7 +18,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Prepare Distribution Directory
         run: |
@@ -38,8 +38,8 @@ jobs:
           # Write the private key to a file
           echo "$EXTENSION_KEY" > key.pem
           
-          # Pack the extension using crx3
-          npx crx3 -p key.pem -o orthex.crx dist/
+          # Pack the extension using crx3 (using --yes to skip install prompt in CI)
+          npx --yes crx3 -p key.pem -o orthex.crx dist/
           
           # Remove the key for security
           rm key.pem
